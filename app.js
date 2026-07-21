@@ -29,6 +29,11 @@
     let currentSvg = null;
     let renderTimeout = null;
     let renderCounter = 0;
+    let zoomLevel = 1;
+
+    const ZOOM_STEP = 0.25;
+    const ZOOM_MIN = 0.25;
+    const ZOOM_MAX = 4;
 
     // ─── Mermaid Init ───────────────────────────────────────────────────────
 
@@ -69,6 +74,7 @@
             errorDisplay.classList.add('hidden');
             currentSvg = svg;
             setExportEnabled(true);
+            zoomReset();
         } catch (err) {
             const msg = err.message || err.str || String(err);
             errorDisplay.textContent = msg;
@@ -253,6 +259,35 @@
         '    FEAT --> TRAIN --> EVAL --> REGISTER',
         '    REGISTER --> RETRAIN --> COMPARE --> SERVE',
     ].join('\n');
+
+    // ─── Zoom ────────────────────────────────────────────────────────────────
+
+    var btnZoomIn = document.getElementById('btn-zoom-in');
+    var btnZoomOut = document.getElementById('btn-zoom-out');
+    var btnZoomReset = document.getElementById('btn-zoom-reset');
+
+    function applyZoom() {
+        preview.style.transform = 'scale(' + zoomLevel + ')';
+    }
+
+    function zoomIn() {
+        zoomLevel = Math.min(ZOOM_MAX, zoomLevel + ZOOM_STEP);
+        applyZoom();
+    }
+
+    function zoomOut() {
+        zoomLevel = Math.max(ZOOM_MIN, zoomLevel - ZOOM_STEP);
+        applyZoom();
+    }
+
+    function zoomReset() {
+        zoomLevel = 1;
+        applyZoom();
+    }
+
+    btnZoomIn.addEventListener('click', zoomIn);
+    btnZoomOut.addEventListener('click', zoomOut);
+    btnZoomReset.addEventListener('click', zoomReset);
 
     // ─── Event Listeners ────────────────────────────────────────────────────
 
