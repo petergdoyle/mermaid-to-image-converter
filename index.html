@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid to Image Converter</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"></script>
+</head>
+<body>
+    <header>
+        <h1>🧜‍♀️ Mermaid to Image Converter</h1>
+        <p class="subtitle">Write or paste Mermaid diagrams — export as SVG, PNG, or JPEG</p>
+    </header>
+
+    <main>
+        <div class="editor-panel">
+            <div class="panel-header">
+                <h2>Editor</h2>
+                <div class="toolbar">
+                    <button id="btn-example" title="Load example diagram">📋 Example</button>
+                    <button id="btn-clear" title="Clear editor">🗑️ Clear</button>
+                </div>
+            </div>
+            <textarea id="mermaid-input" spellcheck="false" placeholder="Enter Mermaid diagram code here...
+
+Example:
+flowchart TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Do something]
+    B -->|No| D[Do something else]
+    C --> E[End]
+    D --> E"></textarea>
+            <div id="error-display" class="error hidden"></div>
+        </div>
+
+        <div class="preview-panel">
+            <div class="panel-header">
+                <h2>Preview</h2>
+                <div class="toolbar">
+                    <select id="theme-select" title="Diagram theme">
+                        <option value="default">Default</option>
+                        <option value="dark">Dark</option>
+                        <option value="forest">Forest</option>
+                        <option value="neutral">Neutral</option>
+                    </select>
+                    <select id="bg-select" title="Background">
+                        <option value="transparent">Transparent</option>
+                        <option value="white">White</option>
+                        <option value="#1a1a2e">Dark</option>
+                    </select>
+                </div>
+            </div>
+            <div id="preview-container">
+                <div id="mermaid-preview" class="preview-content"></div>
+                <p id="placeholder-text" class="placeholder">Your diagram will render here</p>
+            </div>
+        </div>
+    </main>
+
+    <section class="export-bar">
+        <h3>Export</h3>
+        <div class="export-options">
+            <div class="scale-control">
+                <label for="scale-input">Scale:</label>
+                <select id="scale-input">
+                    <option value="1">1x</option>
+                    <option value="2" selected>2x</option>
+                    <option value="3">3x</option>
+                    <option value="4">4x</option>
+                </select>
+            </div>
+            <button id="btn-svg" class="export-btn" disabled>⬇️ SVG</button>
+            <button id="btn-png" class="export-btn" disabled>⬇️ PNG</button>
+            <button id="btn-jpeg" class="export-btn" disabled>⬇️ JPEG</button>
+            <button id="btn-clipboard" class="export-btn" disabled>📋 Copy SVG</button>
+        </div>
+    </section>
+
+    <footer>
+        <p>Built with <a href="https://mermaid.js.org/" target="_blank">Mermaid.js</a> — all rendering happens in your browser, nothing is uploaded.</p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
