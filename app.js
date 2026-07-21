@@ -9,31 +9,34 @@
 
     // ─── Elements ───────────────────────────────────────────────────────────
 
-    const input = document.getElementById('mermaid-input');
-    const preview = document.getElementById('mermaid-preview');
-    const placeholder = document.getElementById('placeholder-text');
-    const errorDisplay = document.getElementById('error-display');
-    const themeSelect = document.getElementById('theme-select');
-    const bgSelect = document.getElementById('bg-select');
-    const scaleInput = document.getElementById('scale-input');
+    var input = document.getElementById('mermaid-input');
+    var preview = document.getElementById('mermaid-preview');
+    var placeholder = document.getElementById('placeholder-text');
+    var errorDisplay = document.getElementById('error-display');
+    var themeSelect = document.getElementById('theme-select');
+    var bgSelect = document.getElementById('bg-select');
+    var scaleInput = document.getElementById('scale-input');
 
-    const btnExample = document.getElementById('btn-example');
-    const btnClear = document.getElementById('btn-clear');
-    const btnSvg = document.getElementById('btn-svg');
-    const btnPng = document.getElementById('btn-png');
-    const btnJpeg = document.getElementById('btn-jpeg');
-    const btnClipboard = document.getElementById('btn-clipboard');
+    var btnExample = document.getElementById('btn-example');
+    var btnClear = document.getElementById('btn-clear');
+    var btnSvg = document.getElementById('btn-svg');
+    var btnPng = document.getElementById('btn-png');
+    var btnJpeg = document.getElementById('btn-jpeg');
+    var btnClipboard = document.getElementById('btn-clipboard');
+    var btnZoomIn = document.getElementById('btn-zoom-in');
+    var btnZoomOut = document.getElementById('btn-zoom-out');
+    var btnZoomReset = document.getElementById('btn-zoom-reset');
 
     // ─── State ──────────────────────────────────────────────────────────────
 
-    let currentSvg = null;
-    let renderTimeout = null;
-    let renderCounter = 0;
-    let zoomLevel = 1;
+    var currentSvg = null;
+    var renderTimeout = null;
+    var renderCounter = 0;
+    var zoomLevel = 1;
 
-    const ZOOM_STEP = 0.25;
-    const ZOOM_MIN = 0.25;
-    const ZOOM_MAX = 4;
+    var ZOOM_STEP = 0.25;
+    var ZOOM_MIN = 0.25;
+    var ZOOM_MAX = 4;
 
     // ─── Mermaid Init ───────────────────────────────────────────────────────
 
@@ -51,7 +54,7 @@
     // ─── Rendering ──────────────────────────────────────────────────────────
 
     async function renderDiagram() {
-        const code = input.value.trim();
+        var code = input.value.trim();
 
         if (!code) {
             preview.innerHTML = '';
@@ -63,30 +66,24 @@
         }
 
         try {
-            // Use a unique ID for each render to avoid conflicts
             renderCounter++;
-            const id = 'mermaid-diagram-' + renderCounter;
+            var id = 'mermaid-diagram-' + renderCounter;
+            var result = await mermaid.render(id, code);
 
-            const { svg } = await mermaid.render(id, code);
-
-            preview.innerHTML = svg;
+            preview.innerHTML = result.svg;
             placeholder.classList.add('hidden');
             errorDisplay.classList.add('hidden');
-            currentSvg = svg;
+            currentSvg = result.svg;
             setExportEnabled(true);
             zoomReset();
         } catch (err) {
-            const msg = err.message || err.str || String(err);
+            var msg = err.message || err.str || String(err);
             errorDisplay.textContent = msg;
             errorDisplay.classList.remove('hidden');
             preview.innerHTML = '';
             placeholder.classList.add('hidden');
             currentSvg = null;
             setExportEnabled(false);
-
-            // Mermaid sometimes leaves error elements in the DOM
-            const errorEl = document.getElementById('d' + (renderCounter));
-            if (errorEl) errorEl.remove();
         }
     }
 
@@ -102,32 +99,50 @@
         renderTimeout = setTimeout(renderDiagram, 500);
     }
 
+    // ─── Zoom ───────────────────────────────────────────────────────────────
+
+    function applyZoom() {
+        preview.style.transform = 'scale(' + zoomLevel + ')';
+    }
+
+    function zoomIn() {
+        zoomLevel = Math.min(ZOOM_MAX, zoomLevel + ZOOM_STEP);
+        applyZoom();
+    }
+
+    function zoomOut() {
+        zoomLevel = Math.max(ZOOM_MIN, zoomLevel - ZOOM_STEP);
+        applyZoom();
+    }
+
+    function zoomReset() {
+        zoomLevel = 1;
+        applyZoom();
+    }
+
     // ─── Export Functions ────────────────────────────────────────────────────
 
-    function downloadBlob(blob, filename) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
+    function downloadDataUri(dataUri, filename) {
+        var a = document.createElement('a');
+        a.href = dataUri;
         a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
     }
 
     function getSvgWithBackground() {
         if (!currentSvg) return null;
 
-        const bg = bgSelect.value;
+        var bg = bgSelect.value;
         if (bg === 'transparent') return currentSvg;
 
-        // Inject background rect into SVG
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(currentSvg, 'image/svg+xml');
-        const svgEl = doc.querySelector('svg');
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(currentSvg, 'image/svg+xml');
+        var svgEl = doc.querySelector('svg');
 
         if (svgEl) {
-            const rect = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            var rect = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
             rect.setAttribute('width', '100%');
             rect.setAttribute('height', '100%');
             rect.setAttribute('fill', bg);
@@ -138,35 +153,32 @@
     }
 
     function exportSvg() {
-        const svg = getSvgWithBackground();
+        var svg = getSvgWithBackground();
         if (!svg) return;
-
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        downloadBlob(blob, 'diagram.svg');
+        var dataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        downloadDataUri(dataUri, 'diagram.svg');
     }
 
     function exportRaster(format) {
-        const svg = getSvgWithBackground() || currentSvg;
+        var svg = getSvgWithBackground() || currentSvg;
         if (!svg) return;
 
-        const scale = parseInt(scaleInput.value) || 2;
+        var scale = parseInt(scaleInput.value) || 2;
 
-        // Create image from SVG
-        const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
+        // Use data URI instead of blob URL (works with file://)
+        var svgDataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 
-        const img = new Image();
+        var img = new Image();
 
         img.onload = function () {
-            const canvas = document.createElement('canvas');
+            var canvas = document.createElement('canvas');
             canvas.width = img.naturalWidth * scale;
             canvas.height = img.naturalHeight * scale;
 
-            const ctx = canvas.getContext('2d');
+            var ctx = canvas.getContext('2d');
 
-            // Fill background for JPEG (no transparency support)
             if (format === 'jpeg') {
-                const bg = bgSelect.value;
+                var bg = bgSelect.value;
                 ctx.fillStyle = (bg === 'transparent') ? 'white' : bg;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
@@ -174,28 +186,22 @@
             ctx.scale(scale, scale);
             ctx.drawImage(img, 0, 0);
 
-            URL.revokeObjectURL(url);
-
-            const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-            const quality = format === 'jpeg' ? 0.92 : undefined;
-
-            canvas.toBlob(function (blob) {
-                if (blob) {
-                    downloadBlob(blob, 'diagram.' + format);
-                }
-            }, mimeType, quality);
+            var mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+            var quality = format === 'jpeg' ? 0.92 : undefined;
+            var dataUrl = canvas.toDataURL(mimeType, quality);
+            downloadDataUri(dataUrl, 'diagram.' + format);
         };
 
         img.onerror = function () {
-            URL.revokeObjectURL(url);
-            console.error('Failed to load SVG as image for raster export');
+            console.error('Failed to load SVG for raster export');
+            alert('Export failed. Try SVG export instead.');
         };
 
-        img.src = url;
+        img.src = svgDataUri;
     }
 
     function copyToClipboard() {
-        const svg = getSvgWithBackground();
+        var svg = getSvgWithBackground();
         if (!svg) return;
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -210,7 +216,7 @@
     }
 
     function fallbackCopy(text) {
-        const textarea = document.createElement('textarea');
+        var textarea = document.createElement('textarea');
         textarea.value = text;
         textarea.style.position = 'fixed';
         textarea.style.opacity = '0';
@@ -260,35 +266,6 @@
         '    REGISTER --> RETRAIN --> COMPARE --> SERVE',
     ].join('\n');
 
-    // ─── Zoom ────────────────────────────────────────────────────────────────
-
-    var btnZoomIn = document.getElementById('btn-zoom-in');
-    var btnZoomOut = document.getElementById('btn-zoom-out');
-    var btnZoomReset = document.getElementById('btn-zoom-reset');
-
-    function applyZoom() {
-        preview.style.transform = 'scale(' + zoomLevel + ')';
-    }
-
-    function zoomIn() {
-        zoomLevel = Math.min(ZOOM_MAX, zoomLevel + ZOOM_STEP);
-        applyZoom();
-    }
-
-    function zoomOut() {
-        zoomLevel = Math.max(ZOOM_MIN, zoomLevel - ZOOM_STEP);
-        applyZoom();
-    }
-
-    function zoomReset() {
-        zoomLevel = 1;
-        applyZoom();
-    }
-
-    btnZoomIn.addEventListener('click', zoomIn);
-    btnZoomOut.addEventListener('click', zoomOut);
-    btnZoomReset.addEventListener('click', zoomReset);
-
     // ─── Event Listeners ────────────────────────────────────────────────────
 
     input.addEventListener('input', debounceRender);
@@ -319,6 +296,10 @@
     btnPng.addEventListener('click', function () { exportRaster('png'); });
     btnJpeg.addEventListener('click', function () { exportRaster('jpeg'); });
     btnClipboard.addEventListener('click', copyToClipboard);
+
+    btnZoomIn.addEventListener('click', zoomIn);
+    btnZoomOut.addEventListener('click', zoomOut);
+    btnZoomReset.addEventListener('click', zoomReset);
 
     // ─── Keyboard Shortcuts ─────────────────────────────────────────────────
 
