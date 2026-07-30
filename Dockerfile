@@ -28,13 +28,13 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 WORKDIR /app
 
 # Copy package files and install
-COPY api/package.json api/package-lock.json* ./api/
-RUN cd api && npm ci --omit=dev
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 # Copy application code
-COPY api/ ./api/
-COPY index.html app.js style.css ./
+COPY server.js renderer.js batch.js cli.js render-template.html ./
+COPY html/ ./html/
 
 EXPOSE 3200
 
-CMD ["node", "api/server.js"]
+CMD ["node", "server.js"]

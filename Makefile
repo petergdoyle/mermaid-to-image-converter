@@ -4,7 +4,6 @@
 
 NODE := node
 NPM  := npm
-API_DIR := api
 PORT := 3200
 
 help: ## Show available targets
@@ -23,22 +22,22 @@ help: ## Show available targets
 	@echo "  Utilities:"
 	@echo "    env           Install Node.js dependencies"
 	@echo "    status        Check running services (local + Docker)"
-	@echo "    batch-convert  Batch extract + render diagrams from .md files"
+	@echo "    batch-convert Batch extract + render diagrams from .md files"
 	@echo "    clean         Remove output/ directory"
 	@echo ""
 	@echo "  Static UI (no server needed):"
-	@echo "    open index.html — works from filesystem, zero deps"
+	@echo "    open html/index.html — works from filesystem, zero deps"
 	@echo ""
 	@echo "  Ports:"
 	@echo "    API + UI:  http://localhost:$(PORT)"
 	@echo "    UI only:   http://localhost:$(PORT)/ui"
-	@echo "    File mode: file://$(PWD)/index.html"
+	@echo "    File mode: file://$(PWD)/html/index.html"
 	@echo ""
 
 # ─── Utilities ───────────────────────────────────────────────────────────────
 
 env: ## Install Node.js dependencies
-	@cd $(API_DIR) && $(NPM) install
+	@$(NPM) install
 	@echo "✅ Dependencies installed"
 
 clean: ## Remove output directory
@@ -63,7 +62,7 @@ status: ## Check running services
 dev-up: env ## Start API + UI server (background)
 	@echo ""
 	@echo "  Starting Mermaid Converter..."
-	@cd $(API_DIR) && $(NODE) server.js &
+	@$(NODE) server.js &
 	@sleep 2
 	@echo ""
 	@echo "  ═══════════════════════════════════════════"
@@ -71,7 +70,7 @@ dev-up: env ## Start API + UI server (background)
 	@echo "  ═══════════════════════════════════════════"
 	@echo "  🔌 API:     http://localhost:$(PORT)"
 	@echo "  🖼️  UI:      http://localhost:$(PORT)/ui"
-	@echo "  📁 Static:  file://$(PWD)/index.html"
+	@echo "  📁 Static:  file://$(PWD)/html/index.html"
 	@echo "  ═══════════════════════════════════════════"
 	@echo ""
 	@echo "  Stop with:  make dev-down"
@@ -86,7 +85,7 @@ dev-down: ## Stop local dev processes
 
 docker-up: ## Build and start Docker container
 	@echo "  Building and starting container..."
-	@cd $(API_DIR) && docker-compose up -d --build
+	@docker-compose up -d --build
 	@echo ""
 	@echo "  ═══════════════════════════════════════════"
 	@echo "  🧜‍♀️ Mermaid Converter Running (Docker)"
@@ -98,19 +97,19 @@ docker-up: ## Build and start Docker container
 	@echo "  Stop with:  make docker-down"
 
 docker-down: ## Stop and remove Docker container
-	@cd $(API_DIR) && docker-compose down
+	@docker-compose down
 	@echo "  ✅ Docker stack stopped"
 
 # ─── Batch Conversion ────────────────────────────────────────────────────────
 
 batch-convert: env ## Batch extract + render (interactive, or: make batch-convert SOURCE=./docs FORMAT=png)
 	@if [ -n "$(SOURCE)" ]; then \
-		$(NODE) $(API_DIR)/cli.js $(SOURCE) \
+		$(NODE) cli.js $(SOURCE) \
 			--format $(or $(FORMAT),png) \
 			--output $(or $(OUTPUT),./output) \
 			--theme $(or $(THEME),neutral) \
 			--scale $(or $(SCALE),2) \
 			--thumb-width $(or $(THUMB_WIDTH),400); \
 	else \
-		$(NODE) $(API_DIR)/cli.js; \
+		$(NODE) cli.js; \
 	fi

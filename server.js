@@ -21,7 +21,7 @@ app.use(express.text({ type: 'text/plain', limit: '1mb' }));
 app.use(express.json({ limit: '10mb' }));
 
 // Serve the static browser UI
-app.use('/ui', express.static(path.join(__dirname, '..')));
+app.use('/ui', express.static(path.join(__dirname, 'html')));
 
 // ─── Health ─────────────────────────────────────────────────────────────────
 
