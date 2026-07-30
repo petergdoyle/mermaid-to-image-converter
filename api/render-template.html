@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <div id="container"></div>
+    <script>
+        window.renderMermaid = async function(code, theme) {
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: theme || 'default',
+                securityLevel: 'loose',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            });
+            const { svg } = await mermaid.render('diagram', code);
+            document.getElementById('container').innerHTML = svg;
+            return svg;
+        };
+    </script>
+</body>
+</html>

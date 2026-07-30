@@ -1,0 +1,23 @@
+{
+  "name": "mermaid-to-image-api",
+  "version": "1.0.0",
+  "description": "Mermaid diagram rendering API — headless conversion to SVG, PNG, JPEG",
+  "main": "server.js",
+  "bin": {
+    "mermaid-convert": "./cli.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "puppeteer": "^23.0.0",
+    "archiver": "^7.0.0",
+    "sharp": "^0.33.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}
