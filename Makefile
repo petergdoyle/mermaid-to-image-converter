@@ -1,6 +1,6 @@
 # Mermaid-to-Image Converter
 # Static browser UI + Node.js conversion API + batch CLI
-.PHONY: help env dev-up dev-down docker-up docker-down status convert clean
+.PHONY: help env dev-up dev-down docker-up docker-down status batch-convert clean
 
 NODE := node
 NPM  := npm
@@ -23,7 +23,7 @@ help: ## Show available targets
 	@echo "  Utilities:"
 	@echo "    env           Install Node.js dependencies"
 	@echo "    status        Check running services (local + Docker)"
-	@echo "    convert       Batch extract + render diagrams from .md files"
+	@echo "    batch-convert  Batch extract + render diagrams from .md files"
 	@echo "    clean         Remove output/ directory"
 	@echo ""
 	@echo "  Static UI (no server needed):"
@@ -103,7 +103,7 @@ docker-down: ## Stop and remove Docker container
 
 # ─── Batch Conversion ────────────────────────────────────────────────────────
 
-convert: env ## Batch extract + render (interactive, or: make convert SOURCE=./docs FORMAT=png)
+batch-convert: env ## Batch extract + render (interactive, or: make batch-convert SOURCE=./docs FORMAT=png)
 	@if [ -n "$(SOURCE)" ]; then \
 		$(NODE) $(API_DIR)/cli.js $(SOURCE) \
 			--format $(or $(FORMAT),png) \

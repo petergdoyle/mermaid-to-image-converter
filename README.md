@@ -24,7 +24,7 @@ That's it. Paste a diagram, export an image.
 ```bash
 make env       # Install dependencies
 make dev-up    # Start API server (http://localhost:3200)
-make convert   # Interactive batch conversion
+make batch-convert   # Interactive batch conversion
 ```
 
 ---
@@ -75,7 +75,7 @@ Docker:
 Utilities:
   env           Install Node.js dependencies
   status        Check running services (local + Docker)
-  convert       Batch extract + render diagrams from .md files
+  batch-convert Batch extract + render diagrams from .md files
   clean         Remove output/ directory
 ```
 
@@ -116,7 +116,7 @@ curl -X POST http://localhost:3200/convert \
 ### Batch Conversion (Interactive)
 
 ```bash
-make convert
+make batch-convert
 ```
 
 Prompts for source directory, output directory, format, theme, scale, and thumbnail size.
@@ -124,7 +124,7 @@ Prompts for source directory, output directory, format, theme, scale, and thumbn
 ### Batch Conversion (Direct)
 
 ```bash
-make convert SOURCE=~/docs FORMAT=png THEME=neutral SCALE=2
+make batch-convert SOURCE=~/docs FORMAT=png THEME=neutral SCALE=2
 ```
 
 Or call the CLI directly:
