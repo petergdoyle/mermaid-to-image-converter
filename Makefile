@@ -86,7 +86,7 @@ dev-down: ## Stop local dev processes
 
 docker-up: ## Build and start Docker container
 	@echo "  Building and starting container..."
-	@cd $(API_DIR) && docker compose up -d --build
+	@cd $(API_DIR) && docker-compose up -d --build
 	@echo ""
 	@echo "  ═══════════════════════════════════════════"
 	@echo "  🧜‍♀️ Mermaid Converter Running (Docker)"
@@ -98,7 +98,7 @@ docker-up: ## Build and start Docker container
 	@echo "  Stop with:  make docker-down"
 
 docker-down: ## Stop and remove Docker container
-	@cd $(API_DIR) && docker compose down
+	@cd $(API_DIR) && docker-compose down
 	@echo "  ✅ Docker stack stopped"
 
 # ─── Batch Conversion ────────────────────────────────────────────────────────
