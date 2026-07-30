@@ -20,7 +20,53 @@
  */
 
 const path = require('path');
+const readline = require('readline');
 const { runBatch } = require('./batch');
+
+/**
+ * Prompt the user for input with a default value.
+ */
+function prompt(rl, question, defaultValue) {
+    return new Promise((resolve) => {
+        const suffix = defaultValue ? ` (${defaultValue})` : '';
+        rl.question(`  ${question}${suffix}: `, (answer) => {
+            resolve(answer.trim() || defaultValue || '');
+        });
+    });
+}
+
+/**
+ * Interactive mode — prompt for each setting with defaults.
+ */
+async function interactiveMode() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+
+    console.log(`\n  🧜‍♀️ Mermaid Batch Converter (Interactive)`);
+    console.log(`  ─────────────────────────────────────────\n`);
+
+    const sourceDir = await prompt(rl, 'Source directory (with .md files)', '.');
+    const output = await prompt(rl, 'Output directory', './output');
+    const format = await prompt(rl, 'Format (svg, png, jpeg)', 'png');
+    const theme = await prompt(rl, 'Theme (default, dark, forest, neutral)', 'neutral');
+    const background = await prompt(rl, 'Background (transparent, white, #hex)', 'white');
+    const scale = await prompt(rl, 'Scale (1-4)', '2');
+    const thumbWidth = await prompt(rl, 'Thumbnail width in px', '400');
+
+    rl.close();
+
+    return {
+        sourceDir,
+        output,
+        format,
+        theme,
+        background,
+        scale: parseInt(scale) || 2,
+        thumbWidth: parseInt(thumbWidth) || 400,
+    };
+}
 
 function parseArgs(args) {
     const opts = {
@@ -97,10 +143,22 @@ async function main() {
     const args = process.argv.slice(2);
     const opts = parseArgs(args);
 
+    // If no source directory provided and no --help, go interactive
     if (!opts.sourceDir) {
-        console.error('Error: source directory is required.\n');
-        printHelp();
-        process.exit(1);
+        if (process.stdin.isTTY) {
+            const interactive = await interactiveMode();
+            opts.sourceDir = interactive.sourceDir;
+            opts.output = interactive.output;
+            opts.format = interactive.format;
+            opts.theme = interactive.theme;
+            opts.background = interactive.background;
+            opts.scale = interactive.scale;
+            opts.thumbWidth = interactive.thumbWidth;
+        } else {
+            console.error('Error: source directory is required.\n');
+            printHelp();
+            process.exit(1);
+        }
     }
 
     const sourceDir = path.resolve(opts.sourceDir);

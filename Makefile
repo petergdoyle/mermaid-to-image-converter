@@ -103,10 +103,14 @@ docker-down: ## Stop and remove Docker container
 
 # ─── Batch Conversion ────────────────────────────────────────────────────────
 
-convert: env ## Batch extract + render (usage: make convert SOURCE=./docs FORMAT=png)
-	@$(NODE) $(API_DIR)/cli.js $(or $(SOURCE),.) \
-		--format $(or $(FORMAT),png) \
-		--output $(or $(OUTPUT),./output) \
-		--theme $(or $(THEME),neutral) \
-		--scale $(or $(SCALE),2) \
-		--thumb-width $(or $(THUMB_WIDTH),400)
+convert: env ## Batch extract + render (interactive, or: make convert SOURCE=./docs FORMAT=png)
+	@if [ -n "$(SOURCE)" ]; then \
+		$(NODE) $(API_DIR)/cli.js $(SOURCE) \
+			--format $(or $(FORMAT),png) \
+			--output $(or $(OUTPUT),./output) \
+			--theme $(or $(THEME),neutral) \
+			--scale $(or $(SCALE),2) \
+			--thumb-width $(or $(THUMB_WIDTH),400); \
+	else \
+		$(NODE) $(API_DIR)/cli.js; \
+	fi
