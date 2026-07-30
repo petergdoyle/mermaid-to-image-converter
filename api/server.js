@@ -39,8 +39,8 @@ app.post('/convert', async (req, res) => {
         }
 
         const format = (req.headers['x-format'] || 'svg').toLowerCase();
-        const theme = req.headers['x-theme'] || 'default';
-        const background = req.headers['x-background'] || (format === 'jpeg' ? 'white' : 'transparent');
+        const theme = req.headers['x-theme'] || 'neutral';
+        const background = req.headers['x-background'] || 'white';
         const scale = parseInt(req.headers['x-scale']) || 2;
         const filename = req.headers['x-filename'] || 'diagram';
 
@@ -78,8 +78,8 @@ app.post('/convert/batch', async (req, res) => {
         }
 
         const format = (req.headers['x-format'] || 'svg').toLowerCase();
-        const theme = req.headers['x-theme'] || 'default';
-        const background = req.headers['x-background'] || (format === 'jpeg' ? 'white' : 'transparent');
+        const theme = req.headers['x-theme'] || 'neutral';
+        const background = req.headers['x-background'] || 'white';
         const scale = parseInt(req.headers['x-scale']) || 2;
         const withThumbnails = req.headers['x-thumbnails'] !== 'false';
 

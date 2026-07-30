@@ -49,7 +49,7 @@
         });
     }
 
-    initMermaid('default');
+    initMermaid('neutral');
 
     // ─── Rendering ──────────────────────────────────────────────────────────
 
