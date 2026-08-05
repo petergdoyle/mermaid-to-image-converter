@@ -1,0 +1,19 @@
+sequenceDiagram
+    actor User as User Browser
+    participant Proxy as Nginx Proxy Manager
+    participant Portal as Homelab Portal (FastAPI)
+    participant Auth as Authentik (192.168.20.202)
+
+    User->>Proxy: GET https://portal.mapleleafhome.net/
+    Proxy->>Auth: Validate Session (Forward Auth)
+    alt Session is invalid / not logged in
+        Auth-->>Proxy: Unauthorized (Redirect to auth.mapleleafhome.net)
+        Proxy-->>User: HTTP 302 Redirect to Authentik Login
+        User->>Auth: Authenticate Credentials
+        Auth-->>User: Set session cookies & Redirect to portal
+    end
+    Auth-->>Proxy: Session Valid (Headers: X-Authentik-*)
+    Proxy->>Portal: Forward Request with Session Cookies
+    Portal->>Auth: GET /api/v3/core/applications/ (Forwarding User Cookies)
+    Auth-->>Portal: List of Authorized Applications for user context
+    Portal-->>User: Render Portal page with filtered applications grid

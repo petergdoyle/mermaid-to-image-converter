@@ -1,6 +1,6 @@
 # Mermaid-to-Image Converter
 # Static browser UI + Node.js conversion API + batch CLI
-.PHONY: help env dev-up dev-down docker-up docker-down status batch-convert clean
+.PHONY: help env build-samples dev-up dev-down docker-up docker-down status batch-convert clean
 
 NODE := node
 NPM  := npm
@@ -21,6 +21,7 @@ help: ## Show available targets
 	@echo ""
 	@echo "  Utilities:"
 	@echo "    env           Install Node.js dependencies"
+	@echo "    build-samples Compile Mermaid diagram samples library"
 	@echo "    status        Check running services (local + Docker)"
 	@echo "    batch-convert Batch extract + render diagrams from .md files"
 	@echo "    clean         Remove output/ directory"
@@ -29,16 +30,20 @@ help: ## Show available targets
 	@echo "    open html/index.html — works from filesystem, zero deps"
 	@echo ""
 	@echo "  Ports:"
-	@echo "    API + UI:  http://localhost:$(PORT)"
-	@echo "    UI only:   http://localhost:$(PORT)/ui"
-	@echo "    File mode: file://$(PWD)/html/index.html"
+	@echo "    API + UI:  http://localhost:\$(PORT)"
+	@echo "    UI only:   http://localhost:\$(PORT)/ui"
+	@echo "    File mode: file://\$(PWD)/html/index.html"
 	@echo ""
 
 # ─── Utilities ───────────────────────────────────────────────────────────────
 
 env: ## Install Node.js dependencies
-	@$(NPM) install
-	@echo "✅ Dependencies installed"
+	@\$(NPM) install
+	@\$(NODE) scripts/build-samples.js
+	@echo "✅ Dependencies installed and samples compiled"
+
+build-samples: ## Compile Mermaid diagram samples library
+	@\$(NODE) scripts/build-samples.js
 
 clean: ## Remove output directory
 	@rm -rf output

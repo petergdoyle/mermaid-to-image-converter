@@ -1,0 +1,84 @@
+{
+  "groups": [
+    {
+      "id": "diagram-types",
+      "name": "Standard Diagram Types",
+      "description": "Demonstration templates representing different types of diagrams supported by Mermaid.js."
+    },
+    {
+      "id": "infrastructure",
+      "name": "Infrastructure & Systems",
+      "description": "Real-world engineering sequence and system diagrams representing homelab flows."
+    },
+    {
+      "id": "project-management",
+      "name": "Project Management & Mapping",
+      "description": "Templates for timeline planning, tasks management, and system scoping."
+    }
+  ],
+  "samples": [
+    {
+      "id": "flowchart-basics",
+      "group_id": "diagram-types",
+      "name": "Flowchart Basics",
+      "description": "A basic flowchart demonstrating decisions, conditions, redirects, and custom node styling.",
+      "file": "flowchart_basics.mmd"
+    },
+    {
+      "id": "class-diagram",
+      "group_id": "diagram-types",
+      "name": "Class Diagram",
+      "description": "Object-oriented software design template representing user and application classes.",
+      "file": "class_diagram.mmd"
+    },
+    {
+      "id": "er-diagram",
+      "group_id": "diagram-types",
+      "name": "Entity Relationship Diagram",
+      "description": "Database design modeling showing user-to-group cardinalities and attributes.",
+      "file": "er_diagram.mmd"
+    },
+    {
+      "id": "state-diagram",
+      "group_id": "diagram-types",
+      "name": "State Diagram",
+      "description": "Finite state machine detailing states and transitions of a deployment pipeline.",
+      "file": "state_diagram.mmd"
+    },
+    {
+      "id": "git-graph",
+      "group_id": "diagram-types",
+      "name": "Git Graph",
+      "description": "Visual representation of git branch commits, merges, and tagging structures.",
+      "file": "git_graph.mmd"
+    },
+    {
+      "id": "sequence-sso",
+      "group_id": "infrastructure",
+      "name": "SSO Forward Auth Flow",
+      "description": "Comprehensive sequence diagram of Nginx Proxy Manager and Authentik SSO Forward Auth middleware.",
+      "file": "sequence_sso.mmd"
+    },
+    {
+      "id": "network-topology",
+      "group_id": "infrastructure",
+      "name": "Homelab Network Topology",
+      "description": "Detailed multi-VLAN layout diagram of Proxmox VE hosts and reverse-proxied guests.",
+      "file": "network_topology.mmd"
+    },
+    {
+      "id": "gantt-chart",
+      "group_id": "project-management",
+      "name": "Gantt Timeline Chart",
+      "description": "Project management timeline scheduling tasks, sections, milestones, and active items.",
+      "file": "gantt_chart.mmd"
+    },
+    {
+      "id": "mindmap",
+      "group_id": "project-management",
+      "name": "Architecture Mindmap",
+      "description": "Hierarchical mindmap brainstorming homelab resource groups and architecture.",
+      "file": "mindmap.mmd"
+    }
+  ]
+}

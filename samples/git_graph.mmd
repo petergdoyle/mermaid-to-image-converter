@@ -1,0 +1,10 @@
+gitGraph
+    commit id: "Initial Commit"
+    commit id: "Setup Ansible Playbooks"
+    branch feature/sso
+    checkout feature/sso
+    commit id: "Add NPM Forward Auth config"
+    commit id: "Bind Authentik Proxy Providers"
+    checkout main
+    merge feature/sso tag: "v1.1.0"
+    commit id: "Document architecture"

@@ -17,10 +17,26 @@
             <div class="panel-header">
                 <h2>Editor</h2>
                 <div class="toolbar">
-                    <button id="btn-example" title="Load example diagram">📋 Example</button>
                     <button id="btn-clear" title="Clear editor">🗑️ Clear</button>
                 </div>
             </div>
+            
+            <div class="templates-bar">
+                <div class="control-group">
+                    <label for="sample-group-select">Category:</label>
+                    <select id="sample-group-select">
+                        <option value="">Choose category...</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="sample-diagram-select">Template:</label>
+                    <select id="sample-diagram-select" disabled>
+                        <option value="">Choose template...</option>
+                    </select>
+                </div>
+            </div>
+            <div id="sample-description-panel" class="sample-description-panel hidden"></div>
+
             <textarea id="mermaid-input" spellcheck="false" placeholder="Enter Mermaid diagram code here...
 
 Example:
@@ -84,6 +100,7 @@ flowchart TD
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script src="samples.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

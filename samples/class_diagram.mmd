@@ -1,0 +1,15 @@
+classDiagram
+    class User {
+        +String username
+        +String email
+        +List groups
+        +isAdmin() Boolean
+    }
+    class Application {
+        +String id
+        +String name
+        +String url
+        +String auth_level
+        +isAccessibleFor(User u) Boolean
+    }
+    User "1" --> "*" Application : has access to

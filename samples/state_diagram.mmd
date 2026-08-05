@@ -1,0 +1,11 @@
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Building : Git Push Trigger
+    Building --> Testing : Compile Success
+    Building --> Failed : Compile Error
+    Testing --> Deploying : Tests Pass
+    Testing --> Failed : Test Failure
+    Deploying --> Active : Health Check OK
+    Deploying --> Failed : Deployment Timeout
+    Failed --> Idle : Acknowledge & Fix
+    Active --> [*] : Terminated

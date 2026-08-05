@@ -251,3 +251,54 @@ footer a {
 footer a:hover {
     text-decoration: underline;
 }
+
+/* Templates Bar Selector styling */
+.templates-bar {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+}
+
+.templates-bar .control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.templates-bar label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.templates-bar select {
+    width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.6rem;
+    border-radius: calc(var(--radius) - 2px);
+    outline: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.templates-bar select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sample-description-panel {
+    padding: 0.6rem 1rem;
+    background: rgba(108, 99, 255, 0.08);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    border-left: 3px solid var(--accent);
+}

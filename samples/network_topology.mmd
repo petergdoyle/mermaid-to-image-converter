@@ -1,0 +1,19 @@
+flowchart TB
+    subgraph WAN["External Network"]
+        Client["Client / User Browser"]
+    end
+
+    subgraph Proxmox["Dayton Proxmox VE (192.168.20.0/24)"]
+        Router["Nginx Proxy Manager\n(Edge Router - .201)"]
+        Portal["Homelab Portal\n(Web UI - .204)"]
+        Auth["Authentik SSO\n(Auth Provider - .202)"]
+    end
+
+    subgraph Polaris["Polaris VLAN (192.168.120.0/24)"]
+        AdguardPolaris["AdGuard Polaris\n(DNS Resolver - .214)"]
+    end
+
+    Client -->|HTTPS:443| Router
+    Router -->|Forward Auth| Auth
+    Router -->|Reverse Proxy| Portal
+    Portal -->|Local Resolution| AdguardPolaris

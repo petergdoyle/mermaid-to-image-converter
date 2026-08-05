@@ -16,8 +16,10 @@
     var themeSelect = document.getElementById('theme-select');
     var bgSelect = document.getElementById('bg-select');
     var scaleInput = document.getElementById('scale-input');
+    var groupSelect = document.getElementById('sample-group-select');
+    var diagramSelect = document.getElementById('sample-diagram-select');
+    var descriptionPanel = document.getElementById('sample-description-panel');
 
-    var btnExample = document.getElementById('btn-example');
     var btnClear = document.getElementById('btn-clear');
     var btnSvg = document.getElementById('btn-svg');
     var btnPng = document.getElementById('btn-png');
@@ -232,40 +234,6 @@
         setTimeout(function () { btn.textContent = originalText; }, 2000);
     }
 
-    // ─── Example Diagram ────────────────────────────────────────────────────
-
-    var EXAMPLE = [
-        'flowchart TD',
-        '    subgraph Intake["1. Project Intake"]',
-        '        FORM["ML Ops Intake Form"]',
-        '        SCOPE["Define Scope"]',
-        '        TEAMS["Assign Teams"]',
-        '    end',
-        '',
-        '    subgraph DataEng["2. Data Engineering"]',
-        '        RAW["Raw Sources"] --> STG["Staging (STG_*)"]',
-        '        STG --> INT["Intermediate (INT_*)"]',
-        '        INT --> FEAT["Feature Table (RPT_*)"]',
-        '    end',
-        '',
-        '    subgraph Model["3. Model Development"]',
-        '        TRAIN["Train Model"]',
-        '        EVAL["Evaluate"]',
-        '        REGISTER["Register in SRMR"]',
-        '    end',
-        '',
-        '    subgraph Prod["4. Production"]',
-        '        RETRAIN["Nightly Retraining"]',
-        '        COMPARE["Compare vs Baseline"]',
-        '        SERVE["Serve Predictions"]',
-        '    end',
-        '',
-        '    FORM --> SCOPE --> TEAMS',
-        '    TEAMS --> RAW',
-        '    FEAT --> TRAIN --> EVAL --> REGISTER',
-        '    REGISTER --> RETRAIN --> COMPARE --> SERVE',
-    ].join('\n');
-
     // ─── Event Listeners ────────────────────────────────────────────────────
 
     input.addEventListener('input', debounceRender);
@@ -281,11 +249,6 @@
         container.style.backgroundColor = bg === 'transparent' ? 'white' : bg;
     });
 
-    btnExample.addEventListener('click', function () {
-        input.value = EXAMPLE;
-        renderDiagram();
-    });
-
     btnClear.addEventListener('click', function () {
         input.value = '';
         renderDiagram();
@@ -297,9 +260,77 @@
     btnJpeg.addEventListener('click', function () { exportRaster('jpeg'); });
     btnClipboard.addEventListener('click', copyToClipboard);
 
-    btnZoomIn.addEventListener('click', zoomIn);
-    btnZoomOut.addEventListener('click', zoomOut);
-    btnZoomReset.addEventListener('click', zoomReset);
+    btnZoomIn.addEventListener('click', function () {
+        zoomLevel = Math.min(ZOOM_MAX, zoomLevel + ZOOM_STEP);
+        applyZoom();
+    });
+    btnZoomOut.addEventListener('click', function () {
+        zoomLevel = Math.max(ZOOM_MIN, zoomLevel - ZOOM_STEP);
+        applyZoom();
+    });
+    btnZoomReset.addEventListener('click', function () {
+        zoomLevel = 1;
+        applyZoom();
+    });
+
+    // ─── Samples / Templates Init ───────────────────────────────────────────
+
+    function initSamples() {
+        if (!window.MERMAID_SAMPLES) return;
+
+        // Populate groups
+        window.MERMAID_SAMPLES.groups.forEach(function (group) {
+            var opt = document.createElement('option');
+            opt.value = group.id;
+            opt.textContent = group.name;
+            groupSelect.appendChild(opt);
+        });
+
+        // On Group change
+        groupSelect.addEventListener('change', function () {
+            var groupId = groupSelect.value;
+            diagramSelect.innerHTML = '<option value="">Choose template...</option>';
+            descriptionPanel.classList.add('hidden');
+
+            if (!groupId) {
+                diagramSelect.disabled = true;
+                return;
+            }
+
+            var groupSamples = window.MERMAID_SAMPLES.samples.filter(function (s) {
+                return s.group_id === groupId;
+            });
+
+            groupSamples.forEach(function (sample) {
+                var opt = document.createElement('option');
+                opt.value = sample.id;
+                opt.textContent = sample.name;
+                diagramSelect.appendChild(opt);
+            });
+
+            diagramSelect.disabled = false;
+        });
+
+        // On Diagram selection
+        diagramSelect.addEventListener('change', function () {
+            var diagramId = diagramSelect.value;
+            if (!diagramId) {
+                descriptionPanel.classList.add('hidden');
+                return;
+            }
+
+            var sample = window.MERMAID_SAMPLES.samples.find(function (s) {
+                return s.id === diagramId;
+            });
+
+            if (sample) {
+                input.value = sample.code;
+                descriptionPanel.textContent = sample.description;
+                descriptionPanel.classList.remove('hidden');
+                renderDiagram();
+            }
+        });
+    }
 
     // ─── Keyboard Shortcuts ─────────────────────────────────────────────────
 
@@ -316,6 +347,8 @@
     });
 
     // ─── Init ───────────────────────────────────────────────────────────────
+
+    initSamples();
 
     if (input.value.trim()) {
         renderDiagram();
