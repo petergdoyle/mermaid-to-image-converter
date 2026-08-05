@@ -58,14 +58,35 @@ window.MERMAID_SAMPLES = {
       "group_id": "infrastructure",
       "name": "SSO Forward Auth Flow",
       "description": "Comprehensive sequence diagram of Nginx Proxy Manager and Authentik SSO Forward Auth middleware.",
-      "code": "sequenceDiagram\n    actor User as User Browser\n    participant Proxy as Nginx Proxy Manager\n    participant Portal as Homelab Portal (FastAPI)\n    participant Auth as Authentik (192.168.20.202)\n\n    User->>Proxy: GET https://portal.mapleleafhome.net/\n    Proxy->>Auth: Validate Session (Forward Auth)\n    alt Session is invalid / not logged in\n        Auth-->>Proxy: Unauthorized (Redirect to auth.mapleleafhome.net)\n        Proxy-->>User: HTTP 302 Redirect to Authentik Login\n        User->>Auth: Authenticate Credentials\n        Auth-->>User: Set session cookies & Redirect to portal\n    end\n    Auth-->>Proxy: Session Valid (Headers: X-Authentik-*)\n    Proxy->>Portal: Forward Request with Session Cookies\n    Portal->>Auth: GET /api/v3/core/applications/ (Forwarding User Cookies)\n    Auth-->>Portal: List of Authorized Applications for user context\n    Portal-->>User: Render Portal page with filtered applications grid"
+      "code": "sequenceDiagram\n    actor User as User Browser\n    participant Proxy as Nginx Proxy Manager\n    participant Portal as Homelab Portal (FastAPI)\n    participant Auth as Authentik (10.0.10.20)\n\n    User->>Proxy: GET https://portal.homelab.local/\n    Proxy->>Auth: Validate Session (Forward Auth)\n    alt Session is invalid / not logged in\n        Auth-->>Proxy: Unauthorized (Redirect to auth.homelab.local)\n        Proxy-->>User: HTTP 302 Redirect to Authentik Login\n        User->>Auth: Authenticate Credentials\n        Auth-->>User: Set session cookies & Redirect to portal\n    end\n    Auth-->>Proxy: Session Valid (Headers: X-Authentik-*)\n    Proxy->>Portal: Forward Request with Session Cookies\n    Portal->>Auth: GET /api/v3/core/applications/ (Forwarding User Cookies)\n    Auth-->>Portal: List of Authorized Applications for user context\n    Portal-->>User: Render Portal page with filtered applications grid"
     },
     {
       "id": "network-topology",
       "group_id": "infrastructure",
-      "name": "Homelab Network Topology",
-      "description": "Detailed multi-VLAN layout diagram of Proxmox VE hosts and reverse-proxied guests.",
-      "code": "flowchart TB\n    subgraph WAN[\"External Network\"]\n        Client[\"Client / User Browser\"]\n    end\n\n    subgraph Proxmox[\"Dayton Proxmox VE (192.168.20.0/24)\"]\n        Router[\"Nginx Proxy Manager\\n(Edge Router - .201)\"]\n        Portal[\"Homelab Portal\\n(Web UI - .204)\"]\n        Auth[\"Authentik SSO\\n(Auth Provider - .202)\"]\n    end\n\n    subgraph Polaris[\"Polaris VLAN (192.168.120.0/24)\"]\n        AdguardPolaris[\"AdGuard Polaris\\n(DNS Resolver - .214)\"]\n    end\n\n    Client -->|HTTPS:443| Router\n    Router -->|Forward Auth| Auth\n    Router -->|Reverse Proxy| Portal\n    Portal -->|Local Resolution| AdguardPolaris"
+      "name": "Network Topology Template",
+      "description": "Detailed multi-VLAN layout diagram of virtualized server hosts and reverse-proxied guest services.",
+      "code": "flowchart TB\n    subgraph WAN[\"External Network\"]\n        Client[\"Client / User Browser\"]\n    end\n\n    subgraph Proxmox[\"Private Cloud VM Node (10.0.10.0/24)\"]\n        Router[\"Nginx Proxy Manager\\n(Reverse Proxy - .10)\"]\n        Portal[\"Homelab Portal\\n(Portal Web UI - .40)\"]\n        Auth[\"Authentik SSO\\n(SSO Provider - .20)\"]\n    end\n\n    subgraph Polaris[\"Isolated Services VLAN (10.0.20.0/24)\"]\n        AdguardPolaris[\"AdGuard Home\\n(DNS Resolver - .53)\"]\n    end\n\n    Client -->|HTTPS:443| Router\n    Router -->|Forward Auth| Auth\n    Router -->|Reverse Proxy| Portal\n    Portal -->|Local Resolution| AdguardPolaris"
+    },
+    {
+      "id": "pie-chart",
+      "group_id": "diagram-types",
+      "name": "Pie Chart",
+      "description": "A simple pie chart illustrating storage allocation shares.",
+      "code": "pie title Homelab Storage Allocation\n    \"Media & Entertainment\" : 45\n    \"System Backups\" : 25\n    \"Application Data\" : 15\n    \"Free Space\" : 15"
+    },
+    {
+      "id": "timeline-diagram",
+      "group_id": "project-management",
+      "name": "Timeline Roadmap",
+      "description": "Chronological timeline detailing milestones or hardware evolution events.",
+      "code": "timeline\n    title Homelab Hardware Evolution\n    2020 : Raspberry Pi 4 (Core DNS & VPN)\n    2022 : Intel NUC (Proxmox Virtualization)\n    2024 : Custom NAS (TrueNAS Scale & ZFS Storage)\n    2026 : Dual-Node HA Cluster (High Availability)"
+    },
+    {
+      "id": "user-journey",
+      "group_id": "project-management",
+      "name": "User Journey",
+      "description": "Step-by-step user journey tracking authentication and dashboard interaction flow.",
+      "code": "journey\n    title User Accessing Homelab Portal\n    section Authentication\n      Navigate to Portal: 5: User\n      SSO Auth Redirect: 3: User, Proxy Manager\n      Enter Credentials: 5: User, Authentik\n    section Accessing Services\n      Load App Grid: 5: User, Portal\n      Launch Dashboard: 5: User"
     },
     {
       "id": "gantt-chart",

@@ -62,9 +62,30 @@
     {
       "id": "network-topology",
       "group_id": "infrastructure",
-      "name": "Homelab Network Topology",
-      "description": "Detailed multi-VLAN layout diagram of Proxmox VE hosts and reverse-proxied guests.",
+      "name": "Network Topology Template",
+      "description": "Detailed multi-VLAN layout diagram of virtualized server hosts and reverse-proxied guest services.",
       "file": "network_topology.mmd"
+    },
+    {
+      "id": "pie-chart",
+      "group_id": "diagram-types",
+      "name": "Pie Chart",
+      "description": "A simple pie chart illustrating storage allocation shares.",
+      "file": "pie_chart.mmd"
+    },
+    {
+      "id": "timeline-diagram",
+      "group_id": "project-management",
+      "name": "Timeline Roadmap",
+      "description": "Chronological timeline detailing milestones or hardware evolution events.",
+      "file": "timeline_diagram.mmd"
+    },
+    {
+      "id": "user-journey",
+      "group_id": "project-management",
+      "name": "User Journey",
+      "description": "Step-by-step user journey tracking authentication and dashboard interaction flow.",
+      "file": "user_journey.mmd"
     },
     {
       "id": "gantt-chart",
