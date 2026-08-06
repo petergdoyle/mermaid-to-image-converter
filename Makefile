@@ -1,6 +1,6 @@
 # Mermaid-to-Image Converter
 # Static browser UI + Node.js conversion API + batch CLI
-.PHONY: help env build-samples dev-up dev-down docker-up docker-down status batch-convert clean
+.PHONY: help env build-samples dev-up dev-down dev-restart docker-up docker-down docker-restart docker-start status batch-convert clean
 
 NODE := node
 NPM  := npm
@@ -86,6 +86,10 @@ dev-down: ## Stop local dev processes
 	@pkill -f "node.*server.js" 2>/dev/null || true
 	@echo "  ✅ Stopped"
 
+dev-restart: dev-down ## Restart local dev processes (down -> sleep 3 -> up)
+	@sleep 3
+	@$(MAKE) dev-up
+
 # ─── Docker ──────────────────────────────────────────────────────────────────
 
 docker-up: ## Build and start Docker container
@@ -104,6 +108,14 @@ docker-up: ## Build and start Docker container
 docker-down: ## Stop and remove Docker container
 	@docker-compose down
 	@echo "  ✅ Docker stack stopped"
+
+docker-restart: docker-down ## Restart Docker container (down -> sleep 3 -> up)
+	@sleep 3
+	@$(MAKE) docker-up
+
+docker-start: docker-down ## Start/Restart Docker container (down -> sleep 3 -> up)
+	@sleep 3
+	@$(MAKE) docker-up
 
 # ─── Batch Conversion ────────────────────────────────────────────────────────
 
