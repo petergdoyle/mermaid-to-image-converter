@@ -5,6 +5,10 @@ services:
       - "3200:3200"
     environment:
       - PORT=3200
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://localhost:11434}
+      - DEFAULT_LLM_PROVIDER=${DEFAULT_LLM_PROVIDER:-ollama}
+      - DEFAULT_LLM_MODEL=${DEFAULT_LLM_MODEL:-gemma4:12b}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3200/health"]
       interval: 10s
