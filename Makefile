@@ -1,6 +1,6 @@
 # Mermaid-to-Image Converter
 # Static browser UI + Node.js conversion API + batch CLI
-.PHONY: help env build-samples dev-up dev-down dev-restart docker-up docker-down docker-restart docker-start status batch-convert clean
+.PHONY: help env build-samples dev-up dev-down dev-status dev-restart docker-up docker-down docker-status docker-restart docker-start batch-convert clean
 
 NODE := node
 NPM  := npm
@@ -14,15 +14,18 @@ help: ## Show available targets
 	@echo "  Local Development:"
 	@echo "    dev-up        Start API + UI server (background)"
 	@echo "    dev-down      Stop local dev processes"
+	@echo "    dev-status    Check running services (local)"
+	@echo "    dev-restart   Restart local dev processes"
 	@echo ""
 	@echo "  Docker:"
 	@echo "    docker-up     Build and start container (API + UI)"
 	@echo "    docker-down   Stop and remove container"
+	@echo "    docker-status Check running services (Docker)"
+	@echo "    docker-restart Restart Docker container"
 	@echo ""
 	@echo "  Utilities:"
 	@echo "    env           Install Node.js dependencies"
 	@echo "    build-samples Compile Mermaid diagram samples library"
-	@echo "    status        Check running services (local + Docker)"
 	@echo "    batch-convert Batch extract + render diagrams from .md files"
 	@echo "    clean         Remove output/ directory"
 	@echo ""
@@ -49,9 +52,9 @@ clean: ## Remove output directory
 	@rm -rf output
 	@echo "✅ output/ removed"
 
-status: ## Check running services
+dev-status: ## Check running local services
 	@echo ""
-	@echo "  Service Status:"
+	@echo "  Local Service Status:"
 	@echo "  ─────────────────────────────────────────"
 	@curl -s http://localhost:$(PORT)/health >/dev/null 2>&1 \
 		&& echo "  ✅ API     http://localhost:$(PORT)" \
@@ -59,6 +62,12 @@ status: ## Check running services
 	@curl -s http://localhost:$(PORT)/ui >/dev/null 2>&1 \
 		&& echo "  ✅ UI      http://localhost:$(PORT)/ui" \
 		|| echo "  ❌ UI      http://localhost:$(PORT)/ui"
+	@echo ""
+
+docker-status: ## Check running Docker services
+	@echo ""
+	@echo "  Docker Container Status:"
+	@echo "  ─────────────────────────────────────────"
 	@docker ps --filter "name=mermaid" --format "  🐳 Docker: {{.Names}} ({{.Status}})" 2>/dev/null || true
 	@echo ""
 

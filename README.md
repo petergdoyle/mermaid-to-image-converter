@@ -49,9 +49,17 @@ make batch-convert   # Interactive batch conversion
 - `GET /health` — Liveness check
 - `POST /convert` — Single diagram → image (SVG, PNG, or JPEG)
 - `POST /convert/batch` — Multiple diagrams → ZIP archive with thumbnails
+- `POST /api/llm/status` — Checks LLM provider and model availability
+- `POST /api/llm/generate` — Prompts LLM to analyze requirements and generate diagrams
 - `/ui` — Serves the browser UI over HTTP
 
-### Batch CLI (`api/cli.js`)
+### AI Diagram Generator (New ✨)
+- 🤖 **LLM-Prompted Diagramming:** Input natural language descriptions of processes, systems, or data structures.
+- ⚙️ **Configurable LLM Provider Layer:** Choose between **Ollama** (default, local) and **Google Gemini** (remote) with custom models, host endpoints, and API key setups.
+- 🟢 **Model Status Checks:** Live availability verification checks if your local Ollama server is online and has the configured model (e.g. `gemma4:12b`) pulled, or validates your Gemini API key.
+- 📚 **Categorized Requirements Library:** Includes pre-written requirement templates across Software Engineering, Data Engineering, MLOps, and Cloud Infrastructure domains for demonstration.
+
+### Batch CLI (`cli.js`)
 
 - Scans directories for `.md` files
 - Extracts all ` ```mermaid ` blocks
@@ -67,16 +75,14 @@ make batch-convert   # Interactive batch conversion
 Local Development:
   dev-up        Start API + UI server (background)
   dev-down      Stop local dev processes
+  dev-status    Check running services (local)
+  dev-restart   Restart local dev processes
 
 Docker:
   docker-up     Build and start container (API + UI)
   docker-down   Stop and remove container
-
-Utilities:
-  env           Install Node.js dependencies
-  status        Check running services (local + Docker)
-  batch-convert Batch extract + render diagrams from .md files
-  clean         Remove output/ directory
+  docker-status Check running services (Docker)
+  docker-restart Restart Docker container
 ```
 
 ---
@@ -85,9 +91,17 @@ Utilities:
 
 ### Browser UI
 
-Open `index.html` in any browser — works from `file://` with zero setup.
+Open `html/index.html` in any browser — works from `file://` with zero setup.
 
 Or serve via the API at `http://localhost:3200/ui` after `make dev-up`.
+
+### AI Diagram Generation
+
+1. Start the server locally and ensure your local Ollama has the model pulled (e.g., `ollama pull gemma4:12b`) or your Gemini API Key is configured in `.env`.
+2. Navigate to `http://localhost:3200/ui` and click the **AI Generator** tab.
+3. Choose a domain category and example requirement from the dropdown (or type your own).
+4. Expand the **LLM Configuration** details to configure provider details if needed.
+5. Click **Generate Diagrams** to get a list of recommended diagram formats (flowcharts, sequence diagrams, mindmaps) containing live rendering previews.
 
 ### Single Diagram via API
 
@@ -130,7 +144,7 @@ make batch-convert SOURCE=~/docs FORMAT=png THEME=neutral SCALE=2
 Or call the CLI directly:
 
 ```bash
-node api/cli.js ./path/to/docs --format svg --output ./output --theme neutral
+node cli.js ./path/to/docs --format svg --output ./output --theme neutral
 ```
 
 ### Batch via API
@@ -205,6 +219,7 @@ All Mermaid diagram types are supported:
 |-------|-----------|
 | Browser UI | Vanilla HTML/CSS/JS, Mermaid.js v11 (CDN) |
 | API Server | Node.js, Express |
+| LLM Layer | Native Fetch, Ollama (Local) / Gemini API (Remote) |
 | Rendering | Puppeteer (headless Chromium) + Mermaid.js |
 | Thumbnails | Sharp |
 | Batch output | Archiver (ZIP) |
@@ -225,19 +240,32 @@ All Mermaid diagram types are supported:
 
 ```
 mermaid-to-image-converter/
-├── index.html          # Static browser UI (zero deps, works from file://)
-├── app.js              # Browser-side rendering logic
-├── style.css           # UI styles
-├── Makefile            # Dev, Docker, and batch targets
-├── api/
-│   ├── server.js       # Express API server
-│   ├── renderer.js     # Puppeteer headless rendering
-│   ├── batch.js        # Directory scanning + extraction + rendering
-│   ├── cli.js          # CLI with interactive prompts
-│   ├── Dockerfile      # Container image (with Chromium)
-│   └── docker-compose.yml
-└── output/             # Generated images (gitignored)
+├── html/
+│   ├── index.html          # Static browser UI
+│   ├── app.js              # Browser UI controller logic
+│   ├── style.css           # UI layout and design system
+│   ├── samples.js          # Predefined Mermaid diagram templates
+│   └── ai-samples.js       # Predefined AI requirement templates
+├── server.js               # Express API Server & Static UI Routes
+├── renderer.js             # Puppeteer headless rendering pipeline
+├── llmService.js           # LLM API connection & parser wrapper
+├── cli.js                  # CLI batch conversion orchestrator
+├── batch.js                # Directory scanning & block extraction
+├── Dockerfile              # Container deployment file
+├── docker-compose.yml      
+├── Makefile                # Dev, Docker, and batch targets
+└── output/                 # Generated images (gitignored)
 ```
+
+---
+
+## UI Screenshots
+
+### Templates View
+![Templates View](img/Template_mode.png)
+
+### AI Generator View
+![AI Generator View](img/AI_mode.png)
 
 ---
 

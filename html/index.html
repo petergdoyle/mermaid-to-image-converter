@@ -21,20 +21,92 @@
                 </div>
             </div>
             
-            <div class="templates-bar">
-                <div class="control-group">
-                    <label for="sample-group-select">Category:</label>
-                    <select id="sample-group-select">
-                        <option value="">Choose category...</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="sample-diagram-select">Template:</label>
-                    <select id="sample-diagram-select" disabled>
-                        <option value="">Choose template...</option>
-                    </select>
+            <div class="tabs-container">
+                <button id="tab-templates" class="tab-btn active">📚 Templates</button>
+                <button id="tab-ai" class="tab-btn">✨ AI Generator</button>
+            </div>
+
+            <div id="panel-templates" class="tab-content-panel">
+                <div class="templates-bar">
+                    <div class="control-group">
+                        <label for="sample-group-select">Category:</label>
+                        <select id="sample-group-select">
+                            <option value="">Choose category...</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="sample-diagram-select">Template:</label>
+                        <select id="sample-diagram-select" disabled>
+                            <option value="">Choose template...</option>
+                        </select>
+                    </div>
                 </div>
             </div>
+
+            <div id="panel-ai" class="tab-content-panel hidden">
+                <div class="ai-generator-bar">
+                    <div class="templates-bar" style="border-bottom: none; padding: 0 0 0.5rem 0; background: none;">
+                        <div class="control-group">
+                            <label for="ai-category-select">Category:</label>
+                            <select id="ai-category-select">
+                                <option value="">Choose category...</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="ai-requirement-select">Example:</label>
+                            <select id="ai-requirement-select" disabled>
+                                <option value="">Choose example...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="ai-prompt-container">
+                        <textarea id="ai-prompt-input" spellcheck="false" placeholder="Describe the process, interactions, or relationships you want to diagram (e.g. 'SSO login authentication sequence')..."></textarea>
+                        <button id="btn-generate-ai" class="ai-action-btn">✨ Generate Diagrams</button>
+                    </div>
+
+                    <div id="ai-status-indicator" class="ai-status-indicator info">
+                        <span class="status-dot"></span>
+                        <span class="status-text">LLM Status: Checking availability...</span>
+                    </div>
+                    
+                    <details class="llm-config-details">
+                        <summary>⚙️ LLM Configuration</summary>
+                        <div class="llm-config-grid">
+                            <div class="control-group">
+                                <label for="ai-provider-select">Provider:</label>
+                                <select id="ai-provider-select">
+                                    <option value="ollama" selected>Ollama</option>
+                                    <option value="google">Google Gemini</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <label for="ai-model-input">Model:</label>
+                                <input type="text" id="ai-model-input" value="gemma4:12b" placeholder="e.g. gemma4:12b, gemini-1.5-flash">
+                            </div>
+                            <div class="control-group" id="ai-endpoint-group">
+                                <label for="ai-endpoint-input">Host:</label>
+                                <input type="text" id="ai-endpoint-input" placeholder="http://localhost:11434">
+                            </div>
+                            <div class="control-group hidden" id="ai-key-group">
+                                <label for="ai-key-input">API Key:</label>
+                                <input type="password" id="ai-key-input" placeholder="Enter Gemini API Key">
+                            </div>
+                        </div>
+                    </details>
+                </div>
+                
+                <div id="ai-loading" class="ai-loading hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing requirements and generating diagrams...</p>
+                </div>
+                
+                <div id="ai-results-panel" class="ai-results-panel hidden">
+                    <h4>Recommended Diagrams:</h4>
+                    <div id="ai-diagrams-list" class="ai-diagrams-list"></div>
+                </div>
+            </div>
+
             <div id="sample-description-panel" class="sample-description-panel hidden"></div>
 
             <textarea id="mermaid-input" spellcheck="false" placeholder="Enter Mermaid diagram code here...
@@ -101,6 +173,7 @@ flowchart TD
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script src="samples.js"></script>
+    <script src="ai-samples.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

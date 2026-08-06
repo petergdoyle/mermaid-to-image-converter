@@ -214,7 +214,7 @@ flowchart TD
     subgraph Root["Repository Root"]
         direction TB
         DOCKER["Dockerfile\ndocker-compose.yml"]
-        SERVER["server.js\nrenderer.js\nbatch.js\ncli.js"]
+        SERVER["server.js\nrenderer.js\nllmService.js\nbatch.js\ncli.js"]
         PKG["package.json\npackage-lock.json"]
         TEMPLATE["render-template.html"]
         MAKE["Makefile"]
@@ -225,6 +225,8 @@ flowchart TD
         INDEX["index.html"]
         APPJS["app.js"]
         STYLECSS["style.css"]
+        SAMPLES["samples.js"]
+        AISAMPLES["ai-samples.js"]
     end
 
     subgraph Docs["docs/"]

@@ -9,10 +9,12 @@
  * Also serves the static browser UI at /ui (index.html + app.js + style.css)
  */
 
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const archiver = require('archiver');
 const { render, renderToRaster, generateThumbnail, closeBrowser } = require('./renderer');
+const { generateDiagrams, checkStatus } = require('./llmService');
 
 const PORT = process.env.PORT || 3200;
 
@@ -120,6 +122,34 @@ app.post('/convert/batch', async (req, res) => {
     } catch (err) {
         console.error('Batch error:', err.message);
         res.status(500).json({ error: 'Batch rendering failed', detail: err.message });
+    }
+});
+
+// ─── AI Diagram Generation ──────────────────────────────────────────────────
+
+app.post('/api/llm/generate', async (req, res) => {
+    try {
+        const { prompt, provider, model, config } = req.body;
+        if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+            return res.status(400).json({ error: 'Request body must contain a "prompt" string.' });
+        }
+
+        const result = await generateDiagrams(prompt, provider, model, config);
+        res.json(result);
+    } catch (err) {
+        console.error('LLM Diagram generation error:', err.message);
+        res.status(500).json({ error: 'LLM Diagram generation failed', detail: err.message });
+    }
+});
+
+app.post('/api/llm/status', async (req, res) => {
+    try {
+        const { provider, model, config } = req.body;
+        const result = await checkStatus(provider, model, config);
+        res.json(result);
+    } catch (err) {
+        console.error('LLM Status check error:', err.message);
+        res.status(500).json({ error: 'LLM Status check failed', detail: err.message });
     }
 });
 
