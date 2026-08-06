@@ -155,6 +155,7 @@
     }
 
     function exportSvg() {
+        zoomReset();
         var svg = getSvgWithBackground();
         if (!svg) return;
         var dataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
@@ -162,6 +163,7 @@
     }
 
     function exportRaster(format) {
+        zoomReset();
         var svg = getSvgWithBackground() || currentSvg;
         if (!svg) return;
 
@@ -203,6 +205,7 @@
     }
 
     function copyToClipboard() {
+        zoomReset();
         var svg = getSvgWithBackground();
         if (!svg) return;
 
