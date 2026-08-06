@@ -32,7 +32,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 # Copy application code
-COPY server.js renderer.js batch.js cli.js render-template.html ./
+COPY server.js renderer.js llmService.js batch.js cli.js render-template.html ./
 COPY html/ ./html/
 
 EXPOSE 3200
