@@ -191,6 +191,41 @@
 
         var scale = parseInt(scaleInput.value) || 2;
 
+        // Parse SVG and ensure explicit pixel width/height so the Image
+        // element renders at the correct intrinsic size (not 300x150 default).
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(svg, 'image/svg+xml');
+        var svgEl = doc.querySelector('svg');
+
+        if (svgEl) {
+            var w = svgEl.getAttribute('width');
+            var h = svgEl.getAttribute('height');
+            var viewBox = svgEl.getAttribute('viewBox');
+
+            // If width/height are missing or relative (e.g. "100%"), derive from viewBox
+            var needsDimensions = !w || !h || w.includes('%') || h.includes('%');
+
+            if (needsDimensions && viewBox) {
+                var parts = viewBox.split(/[\s,]+/);
+                var vbWidth = parseFloat(parts[2]);
+                var vbHeight = parseFloat(parts[3]);
+                if (vbWidth && vbHeight) {
+                    svgEl.setAttribute('width', vbWidth + 'px');
+                    svgEl.setAttribute('height', vbHeight + 'px');
+                }
+            } else if (needsDimensions) {
+                // Fallback: measure from the rendered DOM element
+                var rendered = preview.querySelector('svg');
+                if (rendered) {
+                    var bbox = rendered.getBoundingClientRect();
+                    svgEl.setAttribute('width', bbox.width + 'px');
+                    svgEl.setAttribute('height', bbox.height + 'px');
+                }
+            }
+
+            svg = new XMLSerializer().serializeToString(doc);
+        }
+
         // Use data URI instead of blob URL (works with file://)
         var svgDataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 
