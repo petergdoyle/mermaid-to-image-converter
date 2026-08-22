@@ -5,3 +5,6 @@ output/
 
 # Dev PID files
 .server.pid
+
+# Kiro IDE config (personal)
+.kiro/
