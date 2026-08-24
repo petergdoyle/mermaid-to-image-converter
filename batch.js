@@ -25,24 +25,28 @@ const { render, renderToRaster, generateThumbnail, closeBrowser } = require('./r
 const MERMAID_REGEX = /```mermaid\s*\n([\s\S]*?)```/g;
 
 /**
- * Recursively find all .md files in a directory.
+ * Recursively find all .md files in a directory, respecting max depth.
+ * @param {string} dir - Root directory to search
+ * @param {number|null} maxDepth - Max recursion depth (null = unlimited, 1 = only top-level)
  */
-function findMarkdownFiles(dir) {
+function findMarkdownFiles(dir, maxDepth = null) {
     const results = [];
 
-    function walk(currentDir) {
+    function walk(currentDir, currentDepth) {
         const entries = fs.readdirSync(currentDir, { withFileTypes: true });
         for (const entry of entries) {
             const fullPath = path.join(currentDir, entry.name);
             if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
-                walk(fullPath);
+                if (maxDepth === null || currentDepth < maxDepth) {
+                    walk(fullPath, currentDepth + 1);
+                }
             } else if (entry.isFile() && entry.name.endsWith('.md')) {
                 results.push(fullPath);
             }
         }
     }
 
-    walk(dir);
+    walk(dir, 1);
     return results.sort();
 }
 
@@ -73,6 +77,7 @@ function extractMermaidBlocks(mdFilePath) {
  * @param {string} options.background - Background color
  * @param {number} options.scale - Scale factor for raster
  * @param {number} options.thumbWidth - Thumbnail width in px
+ * @param {number|null} options.depth - Max directory depth (null = unlimited)
  * @param {boolean} options.verbose - Print progress
  */
 async function runBatch(options) {
@@ -84,29 +89,32 @@ async function runBatch(options) {
         background = 'white',
         scale = 2,
         thumbWidth = 400,
+        depth = null,
         verbose = true,
     } = options;
 
     const mermaidDir = path.join(targetDir, 'mermaid');
     fs.mkdirSync(mermaidDir, { recursive: true });
 
-    // Step 1: Find all markdown files
-    const mdFiles = findMarkdownFiles(sourceDir);
+    // Step 1: Find all markdown files (respecting depth)
+    const mdFiles = findMarkdownFiles(sourceDir, depth);
     if (verbose) console.log(`\nFound ${mdFiles.length} markdown files in ${sourceDir}\n`);
 
-    // Step 2: Extract mermaid blocks
+    // Step 2: Extract mermaid blocks, preserving directory structure
     const extractions = [];
     for (const mdFile of mdFiles) {
         const blocks = extractMermaidBlocks(mdFile);
         if (blocks.length === 0) continue;
 
         const relativePath = path.relative(sourceDir, mdFile);
+        const relativeDir = path.dirname(relativePath);
         const stem = path.basename(relativePath, '.md');
 
         for (let i = 0; i < blocks.length; i++) {
             const name = `${stem}_${i + 1}`;
             extractions.push({
                 name,
+                relativeDir: relativeDir === '.' ? '' : relativeDir,
                 content: blocks[i].content,
                 sourceFile: relativePath,
             });
@@ -125,15 +133,21 @@ async function runBatch(options) {
         console.log('  Rendering...\n');
     }
 
-    // Step 3: Write .mmd files and render images
+    // Step 3: Write .mmd files and render images (preserving directory structure)
     let rendered = 0;
     const errors = [];
     const ext = format === 'jpeg' ? 'jpg' : format;
 
     for (const item of extractions) {
-        const mmdPath = path.join(mermaidDir, `${item.name}.mmd`);
-        const imgPath = path.join(mermaidDir, `${item.name}.${ext}`);
-        const thumbPath = path.join(mermaidDir, `${item.name}_thumb.${ext}`);
+        // Preserve source directory structure under mermaid/
+        const outputSubDir = item.relativeDir
+            ? path.join(mermaidDir, item.relativeDir)
+            : mermaidDir;
+        fs.mkdirSync(outputSubDir, { recursive: true });
+
+        const mmdPath = path.join(outputSubDir, `${item.name}.mmd`);
+        const imgPath = path.join(outputSubDir, `${item.name}.${ext}`);
+        const thumbPath = path.join(outputSubDir, `${item.name}_thumb.${ext}`);
 
         // Write .mmd
         fs.writeFileSync(mmdPath, item.content + '\n', 'utf-8');
@@ -150,7 +164,7 @@ async function runBatch(options) {
                     format: 'png', theme, background, scale: 1,
                 });
                 const thumbBuf = await generateThumbnail(rasterBuf, { width: thumbWidth, format: 'png' });
-                const thumbPngPath = path.join(mermaidDir, `${item.name}_thumb.png`);
+                const thumbPngPath = path.join(outputSubDir, `${item.name}_thumb.png`);
                 fs.writeFileSync(thumbPngPath, thumbBuf);
             } else {
                 imageBuffer = await render(item.content, { format, theme, background, scale });
