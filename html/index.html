@@ -102,7 +102,20 @@
                 </div>
                 
                 <div id="ai-results-panel" class="ai-results-panel hidden">
-                    <h4>Recommended Diagrams:</h4>
+                    <div class="ai-results-header">
+                        <h4>Recommended Diagrams:</h4>
+                        <button id="btn-download-report" class="ai-report-btn" title="Download Markdown Report with summary, reasoning, descriptions, and diagrams">📄 Download Report (.md)</button>
+                    </div>
+                    <div id="ai-summary-box" class="ai-summary-box hidden">
+                        <div class="ai-summary-section">
+                            <h5>Executive Summary</h5>
+                            <p id="ai-summary-text"></p>
+                        </div>
+                        <div class="ai-summary-section">
+                            <h5>Architectural Rationale</h5>
+                            <p id="ai-reasoning-text"></p>
+                        </div>
+                    </div>
                     <div id="ai-diagrams-list" class="ai-diagrams-list"></div>
                 </div>
             </div>

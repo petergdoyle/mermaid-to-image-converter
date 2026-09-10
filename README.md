@@ -58,6 +58,7 @@ make batch-convert   # Interactive batch conversion
 - ⚙️ **Configurable LLM Provider Layer:** Choose between **Ollama** (default, local) and **Google Gemini** (remote) with custom models, host endpoints, and API key setups.
 - 🟢 **Model Status Checks:** Live availability verification checks if your local Ollama server is online and has the configured model (e.g. `gemma4:12b`) pulled, or validates your Gemini API key.
 - 📚 **Categorized Requirements Library:** Includes pre-written requirement templates across Software Engineering, Data Engineering, MLOps, and Cloud Infrastructure domains for demonstration.
+- 📄 **Downloadable Markdown Report:** Export a full architectural report document (`.md`) containing an Executive Summary of the system, LLM reasoning and rationale for diagram selection, diagram descriptions, and embedded Mermaid diagrams.
 
 ### Batch CLI (`cli.js`)
 

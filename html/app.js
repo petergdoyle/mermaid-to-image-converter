@@ -50,6 +50,10 @@
     var aiStatusIndicator = document.getElementById('ai-status-indicator');
     var aiCategorySelect = document.getElementById('ai-category-select');
     var aiRequirementSelect = document.getElementById('ai-requirement-select');
+    var btnDownloadReport = document.getElementById('btn-download-report');
+    var aiSummaryBox = document.getElementById('ai-summary-box');
+    var aiSummaryText = document.getElementById('ai-summary-text');
+    var aiReasoningText = document.getElementById('ai-reasoning-text');
 
     // ─── State ──────────────────────────────────────────────────────────────
 
@@ -57,6 +61,7 @@
     var renderTimeout = null;
     var renderCounter = 0;
     var zoomLevel = 1;
+    var lastAiResponse = null;
 
     var ZOOM_STEP = 0.25;
     var ZOOM_MIN = 0.25;
@@ -582,7 +587,8 @@
                 }
 
                 var data = await response.json();
-                renderAiResults(data.diagrams);
+                lastAiResponse = data;
+                renderAiResults(data);
             } catch (err) {
                 console.error('AI Generation error:', err);
                 alert('Error generating diagrams: ' + err.message);
@@ -591,13 +597,37 @@
                 aiLoading.classList.add('hidden');
             }
         });
+
+        if (btnDownloadReport) {
+            btnDownloadReport.addEventListener('click', function () {
+                if (!lastAiResponse || !lastAiResponse.reportMarkdown) {
+                    alert('No generated report available to download.');
+                    return;
+                }
+                var markdownText = lastAiResponse.reportMarkdown;
+                var dataUri = 'data:text/markdown;charset=utf-8,' + encodeURIComponent(markdownText);
+                downloadDataUri(dataUri, 'architecture-diagram-report.md');
+            });
+        }
     }
 
-    function renderAiResults(diagrams) {
+    function renderAiResults(data) {
+        var diagrams = Array.isArray(data) ? data : (data ? data.diagrams : []);
+
         if (!diagrams || diagrams.length === 0) {
             aiDiagramsList.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">No diagrams generated. Try refining your prompt.</p>';
+            if (aiSummaryBox) aiSummaryBox.classList.add('hidden');
             aiResultsPanel.classList.remove('hidden');
             return;
+        }
+
+        // Render Summary & Reasoning if available
+        if (data && data.summary && aiSummaryBox && aiSummaryText && aiReasoningText) {
+            aiSummaryText.textContent = data.summary;
+            aiReasoningText.textContent = data.reasoning || 'Diagram types selected to visually detail structural and procedural flows.';
+            aiSummaryBox.classList.remove('hidden');
+        } else if (aiSummaryBox) {
+            aiSummaryBox.classList.add('hidden');
         }
 
         aiDiagramsList.innerHTML = '';
@@ -627,8 +657,6 @@
                 descriptionPanel.textContent = diagram.description;
                 descriptionPanel.classList.remove('hidden');
                 
-                // Switch back to templates panel visual cue or keep it there?
-                // Just loading code and rendering is good
                 renderDiagram();
             });
 

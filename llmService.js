@@ -12,7 +12,15 @@ Analyze the user's description of a system, process, interaction, or relationshi
 Determine the most appropriate types of diagrams (e.g., flowchart, sequence diagram, entity relationship diagram, state diagram, class diagram, timeline, git graph, pie chart, user journey, gantt chart, mindmap) to represent the use-case.
 Choose between 1 to 3 relevant diagram types.
 
-For each diagram, you must output a markdown section in the following format. Ensure there is a blank line between each section:
+Output your response in the following format:
+
+# Executive Summary
+[Provide a concise 2-3 sentence overview of the system architecture or domain described in the user prompt]
+
+# Architectural Rationale
+[Explain the LLM reasoning behind choosing these specific diagram types to visualize the system and how they complement each other]
+
+For each diagram, you must output a section in the following format:
 
 ### Diagram Name
 Type: flowchart (or sequence, er, state, class, etc.)
@@ -21,7 +29,7 @@ Description: Brief explanation of what this diagram illustrates and why this typ
 [mermaid code]
 \`\`\`
 
-Do not output any conversational introduction or conclusion. Start directly with the first diagram section.`;
+Do not output any conversational introduction or conclusion outside the sections specified above.`;
 
     const userContent = `User Request: "${prompt}"`;
 
@@ -49,7 +57,7 @@ Do not output any conversational introduction or conclusion. Start directly with
         }
 
         const data = await response.json();
-        return parseResponse(data.response);
+        return parseResponse(data.response, prompt, prov, mdl);
 
     } else if (prov === 'google') {
         const apiKey = config.apiKey || process.env.GEMINI_API_KEY;
@@ -85,17 +93,31 @@ Do not output any conversational introduction or conclusion. Start directly with
         }
 
         const text = data.candidates[0].content.parts[0].text;
-        return parseResponse(text);
+        return parseResponse(text, prompt, prov, mdl);
 
     } else {
         throw new Error(`Unsupported LLM provider: ${prov}`);
     }
 }
 
-function parseResponse(text) {
+function parseResponse(text, userPrompt = '', provider = '', model = '') {
     const diagrams = [];
     
-    // Split the text into sections by ### headers
+    // Extract Executive Summary
+    let summary = '';
+    const summaryMatch = text.match(/#+\s*Executive Summary\s*\n([\s\S]*?)(?=#+\s*Architectural Rationale|###|\n#|$)/i);
+    if (summaryMatch) {
+        summary = summaryMatch[1].trim();
+    }
+
+    // Extract Architectural Rationale / LLM Reasoning
+    let reasoning = '';
+    const reasoningMatch = text.match(/#+\s*Architectural Rationale\s*\n([\s\S]*?)(?=###|\n#|$)/i);
+    if (reasoningMatch) {
+        reasoning = reasoningMatch[1].trim();
+    }
+    
+    // Split the text into diagram sections by ### headers
     const sections = text.split(/###\s+/);
     
     for (let i = 1; i < sections.length; i++) {
@@ -104,6 +126,7 @@ function parseResponse(text) {
         
         // Extract Name (first line of the section)
         const nameLine = section.split('\n')[0].trim();
+        if (/Executive Summary|Architectural Rationale/i.test(nameLine)) continue;
         
         // Extract Type using regex
         const typeMatch = section.match(/Type:\s*([a-zA-Z0-9_\-]+)/i);
@@ -154,15 +177,14 @@ function parseResponse(text) {
                 }
                 
                 if (diagramsArray) {
-                    return {
-                        diagrams: diagramsArray.map(d => ({
-                            id: d.id || 'generated-diagram',
-                            name: d.name || 'Generated Diagram',
-                            type: d.type || 'flowchart',
-                            description: d.description || '',
-                            code: d.code || d.mermaid || ''
-                        }))
-                    };
+                    const parsedDiagrams = diagramsArray.map((d, idx) => ({
+                        id: d.id || `generated-diagram-${idx + 1}`,
+                        name: d.name || 'Generated Diagram',
+                        type: d.type || 'flowchart',
+                        description: d.description || '',
+                        code: d.code || d.mermaid || ''
+                    }));
+                    return buildReportObject(parsedDiagrams, parsed.summary || summary, parsed.reasoning || reasoning, userPrompt, provider, model);
                 }
             }
         } catch (e) {
@@ -173,7 +195,55 @@ function parseResponse(text) {
         throw new Error("Could not extract any valid Mermaid diagrams from the model response. Please check terminal logs.");
     }
     
-    return { diagrams };
+    return buildReportObject(diagrams, summary, reasoning, userPrompt, provider, model);
+}
+
+function buildReportObject(diagrams, summary, reasoning, userPrompt, provider, model) {
+    const formattedSummary = summary || `Architectural and process diagrams generated based on user requirements: "${userPrompt}".`;
+    const formattedReasoning = reasoning || `The diagrams selected illustrate key structural, interaction, or procedural views to convey system architecture effectively.`;
+
+    const reportLines = [
+        `# Architectural Diagram Report`,
+        ``,
+        `- **User Prompt:** ${userPrompt}`,
+        `- **LLM Provider:** ${provider || 'N/A'}`,
+        `- **Model:** ${model || 'N/A'}`,
+        `- **Generated Date:** ${new Date().toLocaleString()}`,
+        ``,
+        `---`,
+        ``,
+        `## Executive Summary`,
+        ``,
+        formattedSummary,
+        ``,
+        `## Architectural Rationale & Reasoning`,
+        ``,
+        formattedReasoning,
+        ``,
+        `---`,
+        ``,
+        `## Generated Diagrams`,
+        ``
+    ];
+
+    diagrams.forEach((d, idx) => {
+        reportLines.push(`### ${idx + 1}. ${d.name} (\`${d.type}\`)`);
+        if (d.description) {
+            reportLines.push(`**Description:** ${d.description}`);
+            reportLines.push(``);
+        }
+        reportLines.push(`\`\`\`mermaid`);
+        reportLines.push(d.code);
+        reportLines.push(`\`\`\``);
+        reportLines.push(``);
+    });
+
+    return {
+        summary: formattedSummary,
+        reasoning: formattedReasoning,
+        diagrams: diagrams,
+        reportMarkdown: reportLines.join('\n')
+    };
 }
 
 async function checkStatus(provider, model, config = {}) {
