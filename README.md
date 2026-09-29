@@ -49,14 +49,22 @@ make batch-convert   # Interactive batch conversion
 - `GET /health` — Liveness check
 - `POST /convert` — Single diagram → image (SVG, PNG, or JPEG)
 - `POST /convert/batch` — Multiple diagrams → ZIP archive with thumbnails
-- `POST /api/llm/status` — Checks LLM provider and model availability
-- `POST /api/llm/generate` — Prompts LLM to analyze requirements and generate diagrams
+- `POST /api/llm/status` — Checks the active LLM provider and model availability
+- `POST /api/llm/generate` — Prompts the active LLM to analyze requirements and generate diagrams
+- `GET /api/llm/configs` — List configured providers (API keys masked)
+- `POST /api/llm/configs` — Create/update a provider config (endpoint, API key)
+- `DELETE /api/llm/configs/:id` — Remove a provider config
+- `POST /api/llm/active` — Set the active provider + model used for generation
+- `POST /api/llm/test` — Test a provider connection and discover its available models
+- `POST /api/llm/reseed` — Reset all provider configs to defaults
+- `GET/PUT /api/llm/settings` — Read/update generation settings (temperature, max tokens)
 - `/ui` — Serves the browser UI over HTTP
 
 ### AI Diagram Generator (New ✨)
 - 🤖 **LLM-Prompted Diagramming:** Input natural language descriptions of processes, systems, or data structures.
-- ⚙️ **Configurable LLM Provider Layer:** Choose between **Ollama** (default, local) and **Google Gemini** (remote) with custom models, host endpoints, and API key setups.
-- 🟢 **Model Status Checks:** Live availability verification checks if your local Ollama server is online and has the configured model (e.g. `gemma4:12b`) pulled, or validates your Gemini API key.
+- ⚙️ **Runtime-Configurable Providers & Models:** A **Settings** panel (⚙️ in the header) lets you register providers — **Ollama** (local/remote), **Google Gemini**, and any **OpenAI-compatible** endpoint — set endpoints and API keys, **test connectivity to discover available models**, and select the active provider + model from dropdowns. Selections are persisted server-side (`data/llm-config.json`) and take effect immediately, so you can change models without editing env vars or redeploying.
+- 🔒 **Server-side keys:** API keys are stored on the server and never sent back to the browser (masked in API responses).
+- 🟢 **Model Status Checks:** Live availability verification confirms the active provider is reachable and the selected model is available.
 - 📚 **Categorized Requirements Library:** Includes pre-written requirement templates across Software Engineering, Data Engineering, MLOps, and Cloud Infrastructure domains for demonstration.
 - 📄 **Downloadable Markdown Report:** Export a full architectural report document (`.md`) containing an Executive Summary of the system, LLM reasoning and rationale for diagram selection, diagram descriptions, and embedded Mermaid diagrams.
 
@@ -98,11 +106,17 @@ Or serve via the API at `http://localhost:3200/ui` after `make dev-up`.
 
 ### AI Diagram Generation
 
-1. Start the server locally and ensure your local Ollama has the model pulled (e.g., `ollama pull gemma4:12b`) or your Gemini API Key is configured in `.env`.
-2. Navigate to `http://localhost:3200/ui` and click the **AI Generator** tab.
-3. Choose a domain category and example requirement from the dropdown (or type your own).
-4. Expand the **LLM Configuration** details to configure provider details if needed.
-5. Click **Generate Diagrams** to get a list of recommended diagram formats (flowcharts, sequence diagrams, mindmaps) containing live rendering previews.
+1. Start the server (`make dev-up`) and navigate to `http://localhost:3200/ui`.
+2. Open **Settings** (⚙️ in the header) to configure your LLM providers:
+   - Set the **Base URL / Host** and **API Key** for each provider (Ollama, Gemini, or any OpenAI-compatible endpoint).
+   - Click **Test Connection** on a provider to verify reachability and **discover its available models**.
+   - Under **Active Engine**, pick the provider and model to use, then **Save Active**.
+   - Changes are persisted server-side and apply immediately — no restart needed.
+3. Click the **AI Generator** tab. The active engine is shown at the top of the panel.
+4. Choose a domain category and example requirement from the dropdown (or type your own).
+5. Click **Generate Diagrams** to get a list of recommended diagram formats (flowcharts, sequence diagrams, mindmaps) with live rendering previews.
+
+> First-boot defaults are seeded from `.env` (`DEFAULT_LLM_PROVIDER`, `DEFAULT_LLM_MODEL`, `OLLAMA_HOST`, `GEMINI_API_KEY`, `OPENAI_API_KEY`). After that, the Settings panel is authoritative.
 
 ### Single Diagram via API
 
@@ -220,7 +234,7 @@ All Mermaid diagram types are supported:
 |-------|-----------|
 | Browser UI | Vanilla HTML/CSS/JS, Mermaid.js v11 (CDN) |
 | API Server | Node.js, Express |
-| LLM Layer | Native Fetch, Ollama (Local) / Gemini API (Remote) |
+| LLM Layer | Native Fetch — Ollama (local/remote), Gemini, and OpenAI-compatible endpoints; runtime-configurable via Settings |
 | Rendering | Puppeteer (headless Chromium) + Mermaid.js |
 | Thumbnails | Sharp |
 | Batch output | Archiver (ZIP) |
@@ -249,7 +263,9 @@ mermaid-to-image-converter/
 │   └── ai-samples.js       # Predefined AI requirement templates
 ├── server.js               # Express API Server & Static UI Routes
 ├── renderer.js             # Puppeteer headless rendering pipeline
-├── llmService.js           # LLM API connection & parser wrapper
+├── llmService.js           # LLM provider resolution, generation & model discovery
+├── configStore.js          # Persistent LLM provider registry + active selection
+├── data/                   # Persisted runtime config (llm-config.json, gitignored)
 ├── cli.js                  # CLI batch conversion orchestrator
 ├── batch.js                # Directory scanning & block extraction
 ├── Dockerfile              # Container deployment file

@@ -395,61 +395,6 @@ footer a:hover {
     transform: translateY(1px);
 }
 
-/* LLM Configuration Accordion */
-.llm-config-details {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.5rem;
-}
-
-.llm-config-details summary {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    outline: none;
-    user-select: none;
-    padding: 0.2rem 0.5rem;
-}
-
-.llm-config-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-top: 0.75rem;
-    padding: 0.5rem;
-    border-top: 1px solid var(--border);
-}
-
-.llm-config-grid .control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-
-.llm-config-grid label {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    font-weight: 600;
-}
-
-.llm-config-grid select,
-.llm-config-grid input {
-    width: 100%;
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-    padding: 0.4rem 0.6rem;
-    border-radius: calc(var(--radius) - 2px);
-    outline: none;
-    font-size: 0.8rem;
-}
-
-.llm-config-grid input:focus {
-    border-color: var(--accent);
-}
-
 /* Loading & Results */
 .ai-loading {
     display: flex;
@@ -654,4 +599,347 @@ footer a:hover {
     0% { opacity: 0.4; }
     50% { opacity: 1; }
     100% { opacity: 0.4; }
+}
+
+/* ─── Settings gear (header) ─────────────────────────────────────────────── */
+header {
+    position: relative;
+}
+
+.settings-gear {
+    position: absolute;
+    top: 1.5rem;
+    right: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.5rem 0.9rem;
+}
+
+/* ─── Active engine bar (AI Generator) ───────────────────────────────────── */
+.llm-active-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+}
+
+.llm-active-info {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    flex-wrap: wrap;
+}
+
+.llm-active-label {
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.68rem;
+}
+
+.llm-active-value {
+    color: var(--accent);
+    font-weight: 600;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+    font-size: 0.78rem;
+}
+
+.llm-active-sep {
+    color: var(--text-muted);
+}
+
+.llm-configure-btn {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.7rem;
+    white-space: nowrap;
+}
+
+/* ─── Settings modal ─────────────────────────────────────────────────────── */
+.settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 1rem;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.settings-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 720px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 6rem);
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.settings-header h2 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.settings-close {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.settings-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.settings-banner {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    background: rgba(108, 99, 255, 0.06);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 0.75rem 0.9rem;
+}
+
+.settings-section {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+
+.settings-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+    gap: 0.5rem;
+}
+
+.settings-section-head h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.settings-pill {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a29bfe;
+    background: rgba(108, 99, 255, 0.15);
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+}
+
+.settings-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+@media (max-width: 560px) {
+    .settings-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.settings-section .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.settings-section label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.settings-section select,
+.settings-section input {
+    width: 100%;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.45rem 0.6rem;
+    border-radius: calc(var(--radius) - 2px);
+    outline: none;
+    font-size: 0.8rem;
+}
+
+.settings-section input:focus,
+.settings-section select:focus {
+    border-color: var(--accent);
+}
+
+.settings-hint {
+    font-size: 0.68rem;
+    color: var(--success);
+}
+
+.settings-actions-right {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.9rem;
+}
+
+.settings-primary-btn {
+    background: linear-gradient(135deg, var(--accent) 0%, #a29bfe 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 0.5rem 1rem;
+}
+
+.settings-primary-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--accent) 0%, #a29bfe 100%);
+    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+}
+
+.settings-ghost-btn {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    background: none;
+    color: var(--text-muted);
+}
+
+/* ─── Provider cards ─────────────────────────────────────────────────────── */
+.settings-provider-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.provider-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.9rem;
+}
+
+.provider-card.is-active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(108, 99, 255, 0.25);
+}
+
+.provider-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.provider-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.provider-type {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.provider-badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.12rem 0.45rem;
+    border-radius: 10px;
+}
+
+.provider-badge.active {
+    color: #a29bfe;
+    background: rgba(108, 99, 255, 0.15);
+}
+
+.provider-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.12rem 0.5rem;
+    border-radius: 10px;
+    margin-left: auto;
+}
+
+.provider-status.online {
+    color: var(--success);
+    background: rgba(46, 213, 115, 0.12);
+}
+
+.provider-status.offline {
+    color: var(--error);
+    background: rgba(255, 71, 87, 0.12);
+}
+
+.provider-status.unconfigured {
+    color: var(--text-muted);
+    background: rgba(136, 136, 170, 0.12);
+}
+
+.provider-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+}
+
+@media (max-width: 560px) {
+    .provider-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
+.provider-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.provider-test-result {
+    font-size: 0.7rem;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+}
+
+.provider-test-result.online {
+    color: var(--success);
+}
+
+.provider-test-result.offline {
+    color: var(--error);
+}
+
+.provider-small-btn {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.7rem;
 }

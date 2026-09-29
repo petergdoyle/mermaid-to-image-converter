@@ -37,12 +37,9 @@
 
     var aiPromptInput = document.getElementById('ai-prompt-input');
     var btnGenerateAi = document.getElementById('btn-generate-ai');
-    var aiProviderSelect = document.getElementById('ai-provider-select');
-    var aiModelInput = document.getElementById('ai-model-input');
-    var aiEndpointInput = document.getElementById('ai-endpoint-input');
-    var aiKeyInput = document.getElementById('ai-key-input');
-    var aiEndpointGroup = document.getElementById('ai-endpoint-group');
-    var aiKeyGroup = document.getElementById('ai-key-group');
+    var aiActiveProvider = document.getElementById('ai-active-provider');
+    var aiActiveModel = document.getElementById('ai-active-model');
+    var btnQuickSettings = document.getElementById('btn-quick-settings');
 
     var aiLoading = document.getElementById('ai-loading');
     var aiResultsPanel = document.getElementById('ai-results-panel');
@@ -62,6 +59,7 @@
     var renderCounter = 0;
     var zoomLevel = 1;
     var lastAiResponse = null;
+    var activeConfig = null; // the currently-active provider config (from the store)
 
     var ZOOM_STEP = 0.25;
     var ZOOM_MIN = 0.25;
@@ -448,36 +446,32 @@
             });
         }
 
-        var statusTimeout = null;
-
         async function checkLLMAvailability() {
             if (!aiStatusIndicator) return;
 
-            var provider = aiProviderSelect.value;
-            var model = aiModelInput.value.trim();
-            var endpoint = aiEndpointInput.value.trim();
-            var apiKey = aiKeyInput.value.trim();
+            // Refresh the active config so the generator always reflects the
+            // latest Settings selection (no per-request provider/model here).
+            await refreshActiveConfig();
 
-            var config = {};
-            if (provider === 'ollama' && endpoint) {
-                config.endpoint = endpoint;
+            if (!activeConfig) {
+                aiStatusIndicator.className = 'ai-status-indicator error';
+                aiStatusIndicator.querySelector('.status-text').textContent = 'LLM Status: No provider configured. Open Settings to configure one.';
+                return;
             }
-            if (provider === 'google' && apiKey) {
-                config.apiKey = apiKey;
-            }
+
+            var provider = activeConfig.provider_type;
+            var model = activeConfig.active_model;
 
             aiStatusIndicator.className = 'ai-status-indicator info';
             aiStatusIndicator.querySelector('.status-text').textContent = 'LLM Status: Checking availability of ' + provider + ' (' + model + ')...';
 
             try {
+                // Let the server resolve provider/model/config from the active
+                // stored config — the browser never handles endpoints or keys.
                 var response = await fetch('/api/llm/status', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        provider: provider,
-                        model: model,
-                        config: config
-                    })
+                    body: JSON.stringify({})
                 });
 
                 if (!response.ok) {
@@ -485,22 +479,12 @@
                 }
 
                 var data = await response.json();
-                if (data.available) {
-                    aiStatusIndicator.className = 'ai-status-indicator success';
-                    aiStatusIndicator.querySelector('.status-text').textContent = 'LLM Status: ' + data.reason;
-                } else {
-                    aiStatusIndicator.className = 'ai-status-indicator error';
-                    aiStatusIndicator.querySelector('.status-text').textContent = 'LLM Status: ' + data.reason;
-                }
+                aiStatusIndicator.className = data.available ? 'ai-status-indicator success' : 'ai-status-indicator error';
+                aiStatusIndicator.querySelector('.status-text').textContent = 'LLM Status: ' + data.reason;
             } catch (err) {
                 aiStatusIndicator.className = 'ai-status-indicator error';
                 aiStatusIndicator.querySelector('.status-text').textContent = 'LLM Status: Offline (' + err.message + ')';
             }
-        }
-
-        function debounceStatusCheck() {
-            clearTimeout(statusTimeout);
-            statusTimeout = setTimeout(checkLLMAvailability, 600);
         }
 
         // Tab Switchers
@@ -519,28 +503,16 @@
             checkLLMAvailability();
         });
 
-        // Provider Options Toggle
-        aiProviderSelect.addEventListener('change', function () {
-            var provider = aiProviderSelect.value;
-            if (provider === 'ollama') {
-                aiEndpointGroup.classList.remove('hidden');
-                aiKeyGroup.classList.add('hidden');
-                aiModelInput.value = 'gemma4:12b';
-            } else if (provider === 'google') {
-                aiEndpointGroup.classList.add('hidden');
-                aiKeyGroup.classList.remove('hidden');
-                aiModelInput.value = 'gemini-1.5-flash';
-            }
-            checkLLMAvailability();
-        });
-
-        // Listen for config changes
-        aiModelInput.addEventListener('input', debounceStatusCheck);
-        aiEndpointInput.addEventListener('input', debounceStatusCheck);
-        aiKeyInput.addEventListener('input', debounceStatusCheck);
+        // "Configure" shortcut opens the Settings modal.
+        if (btnQuickSettings) {
+            btnQuickSettings.addEventListener('click', openSettings);
+        }
 
         // Initial check on load
         checkLLMAvailability();
+
+        // Re-check availability whenever settings change the active engine.
+        document.addEventListener('llm-active-changed', checkLLMAvailability);
 
         // Generate Action
         btnGenerateAi.addEventListener('click', async function () {
@@ -550,19 +522,6 @@
                 return;
             }
 
-            var provider = aiProviderSelect.value;
-            var model = aiModelInput.value.trim();
-            var endpoint = aiEndpointInput.value.trim();
-            var apiKey = aiKeyInput.value.trim();
-
-            var config = {};
-            if (provider === 'ollama' && endpoint) {
-                config.endpoint = endpoint;
-            }
-            if (provider === 'google' && apiKey) {
-                config.apiKey = apiKey;
-            }
-
             // UI Loading state
             btnGenerateAi.disabled = true;
             aiLoading.classList.remove('hidden');
@@ -570,15 +529,12 @@
             aiDiagramsList.innerHTML = '';
 
             try {
+                // Provider/model/endpoint/key are resolved server-side from the
+                // active stored config — the browser only sends the prompt.
                 var response = await fetch('/api/llm/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prompt: prompt,
-                        provider: provider,
-                        model: model,
-                        config: config
-                    })
+                    body: JSON.stringify({ prompt: prompt })
                 });
 
                 if (!response.ok) {
@@ -665,6 +621,310 @@
 
         aiResultsPanel.classList.remove('hidden');
     }
+
+    // ─── Active Config (shared between AI Generator + Settings) ─────────────
+
+    async function refreshActiveConfig() {
+        try {
+            var res = await fetch('/api/llm/configs');
+            if (!res.ok) throw new Error('status ' + res.status);
+            var configs = await res.json();
+            activeConfig = configs.find(function (c) { return c.is_active; }) || configs[0] || null;
+            updateActiveBar();
+            return configs;
+        } catch (err) {
+            console.error('Failed to load LLM configs:', err);
+            activeConfig = null;
+            updateActiveBar();
+            return [];
+        }
+    }
+
+    function updateActiveBar() {
+        if (!aiActiveProvider || !aiActiveModel) return;
+        if (activeConfig) {
+            aiActiveProvider.textContent = activeConfig.name + ' (' + activeConfig.provider_type + ')';
+            aiActiveModel.textContent = activeConfig.active_model || '—';
+        } else {
+            aiActiveProvider.textContent = 'Not configured';
+            aiActiveModel.textContent = '—';
+        }
+    }
+
+    // ─── Settings Modal ─────────────────────────────────────────────────────
+
+    var settingsOverlay = document.getElementById('settings-overlay');
+    var btnOpenSettings = document.getElementById('btn-open-settings');
+    var btnCloseSettings = document.getElementById('btn-close-settings');
+    var settingsActiveProvider = document.getElementById('settings-active-provider');
+    var settingsActiveModel = document.getElementById('settings-active-model');
+    var settingsActiveModelHint = document.getElementById('settings-active-model-hint');
+    var btnSaveActive = document.getElementById('btn-save-active');
+    var settingsProviderList = document.getElementById('settings-provider-list');
+    var btnReseed = document.getElementById('btn-reseed');
+
+    var settingsConfigs = [];        // last-loaded configs
+    var settingsEdits = {};          // per-provider unsaved edits { id: {base_url, api_key} }
+
+    function openSettings() {
+        if (!settingsOverlay) return;
+        settingsOverlay.classList.remove('hidden');
+        loadSettings();
+    }
+
+    function closeSettings() {
+        if (settingsOverlay) settingsOverlay.classList.add('hidden');
+    }
+
+    async function loadSettings() {
+        var configs = await refreshActiveConfig();
+        settingsConfigs = configs;
+        settingsEdits = {};
+        renderActiveSelectors();
+        renderProviderCards();
+    }
+
+    function modelsFor(cfg) {
+        if (!cfg) return [];
+        if (cfg.available_models && cfg.available_models.length) return cfg.available_models.slice();
+        return cfg.active_model ? [cfg.active_model] : [];
+    }
+
+    function renderActiveSelectors() {
+        if (!settingsActiveProvider) return;
+        var current = activeConfig ? activeConfig.id : (settingsConfigs[0] && settingsConfigs[0].id);
+
+        settingsActiveProvider.innerHTML = '';
+        settingsConfigs.forEach(function (c) {
+            var opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name + ' (' + c.provider_type + ')' + (c.is_active ? ' ★' : '');
+            settingsActiveProvider.appendChild(opt);
+        });
+        if (current) settingsActiveProvider.value = current;
+
+        renderActiveModelOptions();
+
+        settingsActiveProvider.onchange = function () {
+            renderActiveModelOptions();
+        };
+    }
+
+    function renderActiveModelOptions() {
+        var cfg = settingsConfigs.find(function (c) { return c.id === settingsActiveProvider.value; });
+        var models = modelsFor(cfg);
+        settingsActiveModel.innerHTML = '';
+        models.forEach(function (m) {
+            var opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m;
+            settingsActiveModel.appendChild(opt);
+        });
+        if (cfg && cfg.active_model) settingsActiveModel.value = cfg.active_model;
+
+        if (settingsActiveModelHint) {
+            var hasDiscovered = cfg && cfg.available_models && cfg.available_models.length;
+            settingsActiveModelHint.textContent = hasDiscovered
+                ? '✓ ' + cfg.available_models.length + ' model(s) discovered'
+                : 'Run Test Connection on this provider to discover models';
+        }
+    }
+
+    if (btnSaveActive) {
+        btnSaveActive.addEventListener('click', async function () {
+            btnSaveActive.disabled = true;
+            try {
+                await fetch('/api/llm/active', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        config_id: settingsActiveProvider.value,
+                        active_model: settingsActiveModel.value
+                    })
+                });
+                await loadSettings();
+                document.dispatchEvent(new CustomEvent('llm-active-changed'));
+            } catch (err) {
+                alert('Failed to save active engine: ' + err.message);
+            } finally {
+                btnSaveActive.disabled = false;
+            }
+        });
+    }
+
+    function renderProviderCards() {
+        if (!settingsProviderList) return;
+        settingsProviderList.innerHTML = '';
+
+        settingsConfigs.forEach(function (cfg) {
+            var card = document.createElement('div');
+            card.className = 'provider-card' + (cfg.is_active ? ' is-active' : '');
+
+            // Header
+            var head = document.createElement('div');
+            head.className = 'provider-card-head';
+            head.innerHTML =
+                '<span class="provider-name">' + escapeHtml(cfg.name) + '</span>' +
+                '<span class="provider-type">(' + escapeHtml(cfg.provider_type) + ')</span>' +
+                (cfg.is_active ? '<span class="provider-badge active">Active</span>' : '') +
+                '<span class="provider-status ' + cfg.status + '">' + statusLabel(cfg.status) + '</span>';
+            card.appendChild(head);
+
+            // Editable fields
+            var needsKey = cfg.provider_type !== 'ollama';
+            var fields = document.createElement('div');
+            fields.className = 'provider-fields';
+
+            var urlGroup = document.createElement('div');
+            urlGroup.className = 'control-group';
+            var urlLabel = cfg.provider_type === 'ollama' ? 'Host / Base URL' : 'Base URL';
+            urlGroup.innerHTML = '<label>' + urlLabel + '</label>';
+            var urlInput = document.createElement('input');
+            urlInput.type = 'text';
+            urlInput.value = cfg.base_url || '';
+            urlInput.placeholder = 'http://localhost:11434';
+            urlInput.addEventListener('input', function () {
+                settingsEdits[cfg.id] = settingsEdits[cfg.id] || {};
+                settingsEdits[cfg.id].base_url = urlInput.value;
+            });
+            urlGroup.appendChild(urlInput);
+            fields.appendChild(urlGroup);
+
+            if (needsKey) {
+                var keyGroup = document.createElement('div');
+                keyGroup.className = 'control-group';
+                keyGroup.innerHTML = '<label>API Key' + (cfg.has_api_key ? ' (stored)' : '') + '</label>';
+                var keyInput = document.createElement('input');
+                keyInput.type = 'password';
+                keyInput.value = '';
+                keyInput.placeholder = cfg.has_api_key ? '•••••••• (leave blank to keep)' : 'Enter API key';
+                keyInput.addEventListener('input', function () {
+                    settingsEdits[cfg.id] = settingsEdits[cfg.id] || {};
+                    settingsEdits[cfg.id].api_key = keyInput.value;
+                });
+                keyGroup.appendChild(keyInput);
+                fields.appendChild(keyGroup);
+            }
+            card.appendChild(fields);
+
+            // Actions
+            var actions = document.createElement('div');
+            actions.className = 'provider-card-actions';
+
+            var testBtn = document.createElement('button');
+            testBtn.className = 'provider-small-btn';
+            testBtn.textContent = '🔌 Test Connection';
+            actions.appendChild(testBtn);
+
+            var saveBtn = document.createElement('button');
+            saveBtn.className = 'provider-small-btn';
+            saveBtn.textContent = '💾 Save';
+            actions.appendChild(saveBtn);
+
+            card.appendChild(actions);
+
+            var resultEl = document.createElement('div');
+            resultEl.className = 'provider-test-result hidden';
+            card.appendChild(resultEl);
+
+            // Save provider (base_url + api_key)
+            saveBtn.addEventListener('click', async function () {
+                var edit = settingsEdits[cfg.id] || {};
+                saveBtn.disabled = true;
+                try {
+                    await fetch('/api/llm/configs', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: cfg.id,
+                            base_url: edit.base_url !== undefined ? edit.base_url : cfg.base_url,
+                            api_key: edit.api_key !== undefined ? edit.api_key : ''
+                        })
+                    });
+                    await loadSettings();
+                } catch (err) {
+                    alert('Failed to save provider: ' + err.message);
+                } finally {
+                    saveBtn.disabled = false;
+                }
+            });
+
+            // Test connection + discover models
+            testBtn.addEventListener('click', async function () {
+                var edit = settingsEdits[cfg.id] || {};
+                testBtn.disabled = true;
+                resultEl.className = 'provider-test-result';
+                resultEl.classList.remove('hidden');
+                resultEl.textContent = 'Testing…';
+                try {
+                    var res = await fetch('/api/llm/test', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            config_id: cfg.id,
+                            provider_type: cfg.provider_type,
+                            base_url: edit.base_url !== undefined ? edit.base_url : cfg.base_url,
+                            api_key: edit.api_key !== undefined ? edit.api_key : ''
+                        })
+                    });
+                    var data = await res.json();
+                    resultEl.className = 'provider-test-result ' + (data.status === 'online' ? 'online' : 'offline');
+                    var modelNote = data.models && data.models.length ? ' — ' + data.models.length + ' model(s) found' : '';
+                    resultEl.textContent = (data.status === 'online' ? '✓ ' : '✗ ') + data.message + modelNote +
+                        (data.latency_ms != null ? ' (' + data.latency_ms + 'ms)' : '');
+                    // Reload so discovered models flow into the dropdowns, but
+                    // keep this card's unsaved edits.
+                    await loadSettings();
+                } catch (err) {
+                    resultEl.className = 'provider-test-result offline';
+                    resultEl.textContent = '✗ ' + err.message;
+                } finally {
+                    testBtn.disabled = false;
+                }
+            });
+
+            settingsProviderList.appendChild(card);
+        });
+    }
+
+    function statusLabel(status) {
+        if (status === 'online') return '● Online';
+        if (status === 'offline') return '● Offline';
+        return '○ Unconfigured';
+    }
+
+    function escapeHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    if (btnOpenSettings) btnOpenSettings.addEventListener('click', openSettings);
+    if (btnCloseSettings) btnCloseSettings.addEventListener('click', closeSettings);
+    if (btnReseed) {
+        btnReseed.addEventListener('click', async function () {
+            if (!confirm('Reset all provider configs to defaults? This clears saved endpoints and keys.')) return;
+            try {
+                await fetch('/api/llm/reseed', { method: 'POST' });
+                await loadSettings();
+                document.dispatchEvent(new CustomEvent('llm-active-changed'));
+            } catch (err) {
+                alert('Failed to reseed: ' + err.message);
+            }
+        });
+    }
+    if (settingsOverlay) {
+        settingsOverlay.addEventListener('click', function (e) {
+            if (e.target === settingsOverlay) closeSettings();
+        });
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && settingsOverlay && !settingsOverlay.classList.contains('hidden')) {
+            closeSettings();
+        }
+    });
 
     initAiGenerator();
 

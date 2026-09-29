@@ -3,6 +3,9 @@ output/
 .env
 .DS_Store
 
+# Persisted runtime LLM config (provider registry + active selection)
+data/
+
 # Dev PID files
 .server.pid
 

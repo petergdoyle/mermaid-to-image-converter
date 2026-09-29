@@ -8,6 +8,7 @@
 </head>
 <body>
     <header>
+        <button id="btn-open-settings" class="settings-gear" title="LLM Provider Settings" aria-label="Open settings">⚙️ Settings</button>
         <h1>🧜‍♀️ Mermaid to Image Converter</h1>
         <p class="subtitle">Write or paste Mermaid diagrams — export as SVG, PNG, or JPEG</p>
     </header>
@@ -69,31 +70,16 @@
                         <span class="status-dot"></span>
                         <span class="status-text">LLM Status: Checking availability...</span>
                     </div>
-                    
-                    <details class="llm-config-details">
-                        <summary>⚙️ LLM Configuration</summary>
-                        <div class="llm-config-grid">
-                            <div class="control-group">
-                                <label for="ai-provider-select">Provider:</label>
-                                <select id="ai-provider-select">
-                                    <option value="ollama" selected>Ollama</option>
-                                    <option value="google">Google Gemini</option>
-                                </select>
-                            </div>
-                            <div class="control-group">
-                                <label for="ai-model-input">Model:</label>
-                                <input type="text" id="ai-model-input" value="gemma4:12b" placeholder="e.g. gemma4:12b, gemini-1.5-flash">
-                            </div>
-                            <div class="control-group" id="ai-endpoint-group">
-                                <label for="ai-endpoint-input">Host:</label>
-                                <input type="text" id="ai-endpoint-input" placeholder="http://localhost:11434">
-                            </div>
-                            <div class="control-group hidden" id="ai-key-group">
-                                <label for="ai-key-input">API Key:</label>
-                                <input type="password" id="ai-key-input" placeholder="Enter Gemini API Key">
-                            </div>
+
+                    <div class="llm-active-bar">
+                        <div class="llm-active-info">
+                            <span class="llm-active-label">Engine:</span>
+                            <span id="ai-active-provider" class="llm-active-value">—</span>
+                            <span class="llm-active-sep">·</span>
+                            <span id="ai-active-model" class="llm-active-value">—</span>
                         </div>
-                    </details>
+                        <button id="btn-quick-settings" type="button" class="llm-configure-btn" title="Configure providers and models">⚙️ Configure</button>
+                    </div>
                 </div>
                 
                 <div id="ai-loading" class="ai-loading hidden">
@@ -183,6 +169,55 @@ flowchart TD
     <footer>
         <p>Built with <a href="https://mermaid.js.org/" target="_blank">Mermaid.js</a> — all rendering happens in your browser, nothing is uploaded.</p>
     </footer>
+
+    <!-- ─── Settings Modal ─── -->
+    <div id="settings-overlay" class="settings-overlay hidden">
+        <div class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="settings-header">
+                <h2 id="settings-title">⚙️ LLM Provider Settings</h2>
+                <button id="btn-close-settings" class="settings-close" title="Close" aria-label="Close settings">✕</button>
+            </div>
+
+            <div class="settings-body">
+                <div class="settings-banner">
+                    Configure LLM providers, test connectivity, and pick the active model used by the AI
+                    Generator. Changes apply immediately — no restart or redeploy. API keys are stored
+                    server-side and never sent back to the browser.
+                </div>
+
+                <!-- Active engine selection -->
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <h3>⚡ Active Engine</h3>
+                        <span class="settings-pill">Used for generation</span>
+                    </div>
+                    <div class="settings-grid-2">
+                        <div class="control-group">
+                            <label for="settings-active-provider">Provider</label>
+                            <select id="settings-active-provider"></select>
+                        </div>
+                        <div class="control-group">
+                            <label for="settings-active-model">Model</label>
+                            <select id="settings-active-model"></select>
+                            <p id="settings-active-model-hint" class="settings-hint"></p>
+                        </div>
+                    </div>
+                    <div class="settings-actions-right">
+                        <button id="btn-save-active" class="settings-primary-btn">💾 Save Active</button>
+                    </div>
+                </section>
+
+                <!-- Provider cards -->
+                <section class="settings-section">
+                    <div class="settings-section-head">
+                        <h3>Configured Providers</h3>
+                        <button id="btn-reseed" class="settings-ghost-btn" title="Reset all providers to defaults">↺ Reset to defaults</button>
+                    </div>
+                    <div id="settings-provider-list" class="settings-provider-list"></div>
+                </section>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script src="samples.js"></script>
